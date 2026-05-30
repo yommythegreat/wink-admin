@@ -1,6 +1,5 @@
 import "./lib/error-capture";
 
-import * as Sentry from "@sentry/cloudflare";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
@@ -65,24 +64,15 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse();
 }
 
-type WorkerEnv = Record<string, string>;
-
-export default Sentry.withSentry(
-  (env: WorkerEnv) => ({
-    dsn: env.SENTRY_DSN,
-    tracesSampleRate: 0.1,
-  }),
-  {
-    async fetch(request: Request, env: WorkerEnv, ctx: unknown) {
-      try {
-        const handler = await getServerEntry();
-        const response = await handler.fetch(request, env, ctx);
-        return await normalizeCatastrophicSsrResponse(response);
-      } catch (error) {
-        console.error(error);
-        Sentry.captureException(error);
-        return brandedErrorResponse();
-      }
-    },
+export default {
+  async fetch(request: Request, env: unknown, ctx: unknown) {
+    try {
+      const handler = await getServerEntry();
+      const response = await handler.fetch(request, env, ctx);
+      return await normalizeCatastrophicSsrResponse(response);
+    } catch (error) {
+      console.error(error);
+      return brandedErrorResponse();
+    }
   },
-);
+};
