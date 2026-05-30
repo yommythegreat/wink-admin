@@ -1,18 +1,17 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
-// Root redirects to admin login (or admin dashboard if already authenticated).
+// Root redirects to admin login — the login page handles the already-authenticated case.
 export const Route = createFileRoute("/")({
-  beforeLoad: async () => {
-    if (typeof window === "undefined") return;
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session) {
-      throw redirect({ to: "/admin" });
-    } else {
-      throw redirect({ to: "/admin/login" });
-    }
-  },
-  component: () => null,
+  component: RedirectToAdmin,
 });
+
+function RedirectToAdmin() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate({ to: "/admin/login" });
+  }, [navigate]);
+
+  return null;
+}
