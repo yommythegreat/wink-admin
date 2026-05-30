@@ -54,12 +54,11 @@ If a user winks someone they have already winked before, the old wink is replace
 
 When user B winks back user A (or vice versa), a database trigger detects the mutual wink and automatically creates a 24-hour chat room between them. If the two users previously matched and a chat already exists, the old chat and all its messages are deleted and a fresh chat is created — every match starts clean.
 
-Both users are taken to the Match screen, which shows:
-• A "They're into you too." confirmation
-• A 24-hour countdown — this timer starts from the moment of the mutual wink, not when the first wink was sent
-• A "Say something" button that opens the chat thread
+The two users land in different places depending on their role:
+• Person A (original sender) — navigated to the Match screen, which shows a "They're into you too." confirmation, a 24-hour countdown (from the moment of the mutual wink), and a "Say something" button that opens the chat.
+• Person B (the person who winked back) — navigated directly to Chats, where the new conversation appears.
 
-The match screen can also be reached from the Wink In tab by tapping "See match" on an already-matched wink.`,
+Person A can also reach the Match screen later by going to Wink Out, finding the matched wink, and tapping "See match".`,
   },
   {
     title: "How Chats work",
@@ -123,7 +122,7 @@ Free tier:
 
 Premium tier:
 • Unlimited live sessions per day
-• Custom session duration (user sets their preferred length in preferences)
+• Session duration: choose from 10, 20, or 30 minutes (set in preferences)
 • Wink response window: 24 hours
 • All future premium features as they are released
 
