@@ -35,8 +35,10 @@ Blocks are enforced at the database level — a blocked user will never appear i
     title: "How Winks work",
     body: `A wink is a lightweight expression of interest — Wink's equivalent of a like or a tap.
 
-Wink In tab — shows winks the user has received that are still within the response window.
-Wink Out tab — shows winks the user has sent and their current status (Awaiting or Matched).
+Wink In tab — shows winks the user has received that are still within the response window and have not yet become matches.
+Wink Out tab — shows winks the user has sent that are still awaiting a response. Once a wink becomes a mutual match, it disappears from Wink Out and shows up as a chat in Chats.
+
+When a wink arrives in real time, the receiver gets a toast notification: "👀 [Name] winked at you."
 
 Response windows (determined by the receiver's plan):
 • Free receiver — 30 minutes from when the wink was sent.
@@ -54,11 +56,18 @@ If a user winks someone they have already winked before, the old wink is replace
 
 When user B winks back user A (or vice versa), a database trigger detects the mutual wink and automatically creates a 24-hour chat room between them. If the two users previously matched and a chat already exists, the old chat and all its messages are deleted and a fresh chat is created — every match starts clean.
 
-The two users land in different places depending on their role:
-• Person A (original sender) — navigated to the Match screen, which shows a "They're into you too." confirmation, a 24-hour countdown (from the moment of the mutual wink), and a "Say something" button that opens the chat.
-• Person B (the person who winked back) — navigated directly to Chats, where the new conversation appears.
+Both users see the same success modal:
+• Title: "It's a Wink Match! 🎉"
+• Subtitle: "You both winked. Start the conversation while the moment is still fresh."
+• Two buttons: Proceed to Chat (lands on the Chats list) and Later (dismisses the modal).
 
-Person A can also reach the Match screen later by going to Wink Out, finding the matched wink, and tapping "See match".`,
+The modal appears for the user who initiated the wink-back immediately. For the original sender, the modal appears the next time they are in the app — whether they are currently active or sign in later. Either button on the modal marks the match as acknowledged, so it does not reappear on refresh or future logins.
+
+If a user receives multiple match-backs while offline, a single modal still appears on next login — Proceed to Chat takes them to the Chats list where all matched conversations are waiting.
+
+The 24-hour chat countdown starts from the moment of the mutual wink, not from when the first wink was sent. Matched winks no longer appear in Wink In or Wink Out — the match lives as a chat from that point on.
+
+Scenario where user B finds user A in Discover and winks (after A has already winked at B): this is treated as a wink-back, not a new wink. The match is created immediately, B sees the modal, A's profile leaves B's Discover feed, and A sees the modal on next interaction.`,
   },
   {
     title: "How Chats work",
