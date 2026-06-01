@@ -39,6 +39,13 @@ function AdminLayout() {
     if (!isAdmin) { navigate({ to: "/admin/login" }); }
   }, [authLoading, roleLoading, user, isAdmin, navigate]);
 
+  // Render gate: never mount the AdminNav + content until both auth and
+  // role checks have resolved AND confirmed an admin. Avoids the redirect
+  // race that produced the /admin ↔ /admin/login URL bounce.
+  if (authLoading || roleLoading || !user || !isAdmin) {
+    return <div className="min-h-[100dvh] bg-background" />;
+  }
+
   return (
     <div className="flex min-h-[100dvh] bg-background text-foreground">
       <AdminNav />

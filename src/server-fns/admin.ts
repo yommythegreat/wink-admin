@@ -601,6 +601,7 @@ export const getAdminReports = createServerFn({ method: "POST" })
         reported_person_id: r.reported_person_id,
         reported_person_name: r.reported_person_name,
         reported_person_email: emailMap.get(r.reported_person_id) ?? null,
+        category: (r as { category?: string | null }).category ?? null,
         reason: r.reason,
         also_blocked: r.also_blocked,
         status: r.status as "pending" | "reviewed" | "dismissed",
@@ -943,3 +944,57 @@ export const getAdminAuditLog = createServerFn({ method: "POST" })
 
     return { entries: entries ?? [], total: count ?? 0 };
   });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// App configuration (knobs that were previously hardcoded in the user app)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const APP_CONFIG_KEYS = [
+  "default_radius_m",
+  "radius_options_m",
+  "free_session_minutes",
+  "paid_session_options_minutes",
+  "free_daily_session_cap",
+] as const;
+type AppConfigKey = (typeof APP_CONFIG_KEYS)[number];
+
+/** Read all app_config rows. No auth — values are public per RLS. */
+export const getAppConfig = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ token: z.string() }))
+  .handler(async ({ data }) => {
+    await requireAdminUser(data.token);
+    const { data: rows, error } = await supabaseAdmin
+      .from("app_config")
+      .select("key, value, updated_at");
+    if (error) throw error;
+    return rows ?? [];
+  });
+
+/** Admin-only single-key update. */
+export const updateAppConfig = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      token: z.string(),
+      key: z.enum(APP_CONFIG_KEYS),
+      // jsonb value — we accept anything Zod-serializable
+      value: z.any(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const admin = await requireAdminUser(data.token);
+    const { error } = await supabaseAdmin
+      .from("app_config")
+      .update({ value: data.value })
+      .eq("key", data.key);
+    if (error) throw error;
+    await logAdminAction({
+      adminId: admin.userId,
+      action: "app_config.update",
+      targetType: "app_config",
+      targetId: data.key,
+      payload: { value: data.value },
+    });
+    return { ok: true };
+  });
+
+export type AppConfigRow = { key: AppConfigKey; value: unknown; updated_at: string };

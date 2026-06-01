@@ -30,5 +30,13 @@ function AuthenticatedLayout() {
     }
   }, [loading, user, navigate]);
 
+  // Render gate: don't mount the Outlet (which spins up the admin role check
+  // and its own useEffect redirects) until auth state is fully resolved.
+  // Eliminates the redirect race between this layout, _admin, and admin.login
+  // that produced the /admin ↔ /admin/login URL bounce.
+  if (loading || !user) {
+    return <div className="min-h-[100dvh] bg-background" />;
+  }
+
   return <Outlet />;
 }

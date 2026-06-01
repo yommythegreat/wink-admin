@@ -117,6 +117,7 @@ function AdminModerationPage() {
                   <TableHead className="w-6" />
                   <TableHead>Reporter</TableHead>
                   <TableHead>Reported</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Reason</TableHead>
                   <TableHead>Blocked?</TableHead>
                   <TableHead>Filed</TableHead>
@@ -128,7 +129,7 @@ function AdminModerationPage() {
                 {activeLoading
                   ? Array.from({ length: 6 }).map((_, i) => (
                       <TableRow key={i}>
-                        {Array.from({ length: 7 }).map((__, j) => (
+                        {Array.from({ length: 8 }).map((__, j) => (
                           <TableCell key={j}>
                             <div className="h-4 animate-pulse rounded-full bg-surface" />
                           </TableCell>
@@ -169,8 +170,17 @@ function AdminModerationPage() {
                               {r.reported_person_email ?? r.reported_person_id.slice(0, 8)}
                             </Link>
                           </TableCell>
+                          <TableCell className="text-sm">
+                            {r.category ? (
+                              <span className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                                {r.category}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
                           <TableCell className="max-w-[220px] truncate text-sm text-muted-foreground">
-                            {r.reason}
+                            {r.reason ?? "—"}
                           </TableCell>
                           <TableCell className="text-sm">
                             {r.also_blocked ? "Yes" : "No"}

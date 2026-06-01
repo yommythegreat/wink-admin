@@ -62,7 +62,8 @@ export type AdminReportRow = {
   reported_person_id: string;
   reported_person_name: string | null;
   reported_person_email: string | null;
-  reason: string;
+  category: string | null;
+  reason: string | null;
   also_blocked: boolean;
   status: "pending" | "reviewed" | "dismissed";
   created_at: string;

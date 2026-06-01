@@ -21,7 +21,7 @@ const sections: Section[] = [
 
 Going live requires location permission — the app captures the user's GPS coordinates and writes them to their profile alongside is_live = true. Free users get one live session per day, capped at 5 minutes. Premium users can go live unlimited times and set their own session duration.
 
-While live, Wink scans for other users who are also live within the configured radius (default 100 m). Results appear in three views the user can switch between:
+While live, Wink scans for other users who are also live within the configured radius (default 50 m). Results appear in three views the user can switch between:
 
 • Stack — one profile at a time, swipe-style. Tap the wink button to send a wink or X to pass.
 • Radar — an animated radar showing all nearby profiles as dots. Tap a dot to expand and act.
@@ -91,8 +91,9 @@ Fields:
 • Avatar — profile photo
 • Date of birth — used to show approximate age in Discover (e.g. "Sofia, 27")
 • Gender — M, F, or Other
-• Intent — Dating, Networking, or Both
 • Interests — free-form tags
+
+Wink doesn't ask users to pick an intent (Dating / Networking / Both). The app supports both organically — the user's bio and interests communicate context, and matches happen on mutual winks regardless of category.
 
 Profiles are only visible to other users in Discover while the profile owner is live. Outside of a live session, a profile is only visible to users who share an active wink or chat with them.`,
   },
@@ -148,7 +149,7 @@ Any user can block another person from inside an active chat (⋯ menu › Block
 • Optionally submits a report to the admin Moderation queue
 
 Reporting:
-When blocking, users can select a reason (e.g. harassment, inappropriate content). Reports appear in the Admin › Moderation section with the reporter's name, the reported person's name, the reason, and a timestamp. Admins can dismiss, mark as reviewed, or ban the reported user directly from the moderation queue.
+When blocking, users see a two-option category picker (Harassment, No longer needed) and an optional free-text field for additional context. Either is sufficient — picking a category alone is a valid report, typing freely without a category is also accepted. Both can be submitted together. Reports appear in the Admin › Moderation section with the reporter's name, the reported person's name, the category, any details the user typed, and a timestamp. Admins can dismiss, mark as reviewed, or ban the reported user directly from the moderation queue.
 
 Deleted accounts:
 When a user deletes their account, their email is blocklisted. They cannot log back in or register a new account with the same address.`,

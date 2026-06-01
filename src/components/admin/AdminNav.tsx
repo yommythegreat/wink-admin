@@ -7,6 +7,7 @@ import {
   LogOut,
   UserCog,
   BookOpen,
+  Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,6 +24,7 @@ export function AdminNav() {
     { to: "/admin/users", label: "Users", icon: Users, exact: false },
     { to: "/admin/moderation", label: "Moderation", icon: ShieldAlert, exact: false },
     { to: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, exact: false },
+    { to: "/admin/config", label: "Configurations", icon: Settings2, exact: false },
     { to: "/admin/guide", label: "Product Guide", icon: BookOpen, exact: false },
     ...(role === "SUPER_ADMIN"
       ? [{ to: "/admin/admins", label: "Admin Team", icon: UserCog, exact: false }]
