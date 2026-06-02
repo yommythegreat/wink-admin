@@ -149,7 +149,7 @@ Any user can block another person from inside an active chat (⋯ menu › Block
 • Optionally submits a report to the admin Moderation queue
 
 Reporting:
-When blocking, users see a two-option category picker (Harassment, No longer needed) and an optional free-text field for additional context. Either is sufficient — picking a category alone is a valid report, typing freely without a category is also accepted. Both can be submitted together. Reports appear in the Admin › Moderation section with the reporter's name, the reported person's name, the category, any details the user typed, and a timestamp. Admins can dismiss, mark as reviewed, or ban the reported user directly from the moderation queue.
+When blocking, users see a two-option category picker (Inappropriate messages, No longer needed) and an optional free-text field for additional context. Either is sufficient — picking a category alone is a valid report, typing freely without a category is also accepted. Both can be submitted together. Reports appear in the Admin › Moderation section with the reporter's name, the reported person's name, the category, any details the user typed, and a timestamp. Admins can dismiss, mark as reviewed, or ban the reported user directly from the moderation queue.
 
 Deleted accounts:
 When a user deletes their account, their email is blocklisted. They cannot log back in or register a new account with the same address.`,
