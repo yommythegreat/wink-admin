@@ -188,7 +188,9 @@ export const getAdminUsers = createServerFn({ method: "POST" })
     let query = supabaseAdmin
       .from("profiles")
       .select(
-        `id, display_name, avatar_url, bio, birthdate, gender, intent,
+        // `intent` was dropped on 2026-06-01 by migration 20260601000001_drop_intent.sql;
+        // selecting it was 500ing the whole query and rendering this page empty.
+        `id, display_name, avatar_url, bio, birthdate, gender,
          is_live, last_seen_at, onboarding_completed, created_at`,
         { count: "exact" },
       )
@@ -273,7 +275,6 @@ export const getAdminUsers = createServerFn({ method: "POST" })
         bio: p.bio,
         birthdate: p.birthdate,
         gender: p.gender,
-        intent: p.intent,
         is_live: p.is_live,
         is_paid: (sub as { is_paid?: boolean } | undefined)?.is_paid ?? false,
         plan_tier: (sub as { plan_tier?: string | null } | undefined)?.plan_tier ?? null,

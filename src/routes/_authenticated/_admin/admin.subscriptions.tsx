@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { RecordCount } from "@/components/admin/RecordCount";
 import { AdminStatCard } from "@/components/admin/AdminStatCard";
 import { AdminBadge } from "@/components/admin/AdminBadge";
 import { useAdminQuery } from "@/hooks/use-admin-query";
@@ -55,6 +56,7 @@ function AdminSubscriptionsPage() {
     <div className="flex flex-col">
       <AdminHeader
         crumbs={[{ label: "Admin", to: "/admin" }, { label: "Subscriptions" }]}
+        right={<RecordCount count={data?.subscriptions?.length} label="subscriptions" />}
       />
 
       <div className="space-y-6 p-6">
@@ -110,6 +112,7 @@ function AdminSubscriptionsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">S/N</TableHead>
                 <TableHead className="w-10" />
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
@@ -123,15 +126,16 @@ function AdminSubscriptionsPage() {
               {isLoading
                 ? Array.from({ length: 8 }).map((_, i) => (
                     <TableRow key={i}>
-                      {Array.from({ length: 7 }).map((__, j) => (
+                      {Array.from({ length: 8 }).map((__, j) => (
                         <TableCell key={j}>
                           <div className="h-4 animate-pulse rounded-full bg-surface" />
                         </TableCell>
                       ))}
                     </TableRow>
                   ))
-                : (data?.subscriptions ?? []).map((s) => (
+                : (data?.subscriptions ?? []).map((s, idx) => (
                     <TableRow key={s.user_id}>
+                      <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
                       <TableCell>
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={s.avatar_url ?? undefined} />

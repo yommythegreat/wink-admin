@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { RecordCount } from "@/components/admin/RecordCount";
 import { AdminBadge } from "@/components/admin/AdminBadge";
 import { AdminConfirmAction } from "@/components/admin/AdminConfirmAction";
 import { useAdminQuery } from "@/hooks/use-admin-query";
@@ -91,9 +92,10 @@ function AdminModerationPage() {
       <AdminHeader
         crumbs={[{ label: "Admin", to: "/admin" }, { label: "Moderation" }]}
         right={
-          <span className="text-sm text-muted-foreground">
-            {activeTotal} {isBlocksTab ? "block-only records" : `${status} reports`}
-          </span>
+          <RecordCount
+            count={activeTotal}
+            label={isBlocksTab ? "block-only records" : `${status} reports`}
+          />
         }
       />
 

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Search } from "lucide-react";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { RecordCount } from "@/components/admin/RecordCount";
 import { AdminBadge } from "@/components/admin/AdminBadge";
 import { AdminConfirmAction } from "@/components/admin/AdminConfirmAction";
 import { useAdminQuery } from "@/hooks/use-admin-query";
@@ -80,7 +81,10 @@ function AdminUsersPage() {
 
   return (
     <div className="flex flex-col">
-      <AdminHeader crumbs={[{ label: "Admin", to: "/admin" }, { label: "Users" }]} />
+      <AdminHeader
+        crumbs={[{ label: "Admin", to: "/admin" }, { label: "Users" }]}
+        right={<RecordCount count={data?.total} label="users" />}
+      />
 
       <div className="space-y-4 p-6">
         <Tabs defaultValue="active">
@@ -115,9 +119,6 @@ function AdminUsersPage() {
                   <SelectItem value="live">Live now</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="ml-auto text-sm text-muted-foreground">
-                {data?.total ?? 0} users
-              </span>
             </div>
 
             {/* Table */}
@@ -125,6 +126,7 @@ function AdminUsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">S/N</TableHead>
                     <TableHead className="w-10" />
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
@@ -139,19 +141,20 @@ function AdminUsersPage() {
                   {isLoading
                     ? Array.from({ length: 8 }).map((_, i) => (
                         <TableRow key={i}>
-                          {Array.from({ length: 8 }).map((__, j) => (
+                          {Array.from({ length: 9 }).map((__, j) => (
                             <TableCell key={j}>
                               <div className="h-4 animate-pulse rounded-full bg-surface" />
                             </TableCell>
                           ))}
                         </TableRow>
                       ))
-                    : (data?.users ?? []).map((u) => (
+                    : (data?.users ?? []).map((u, idx) => (
                         <TableRow
                           key={u.id}
                           className="group cursor-pointer"
                           onClick={() => navigate({ to: "/admin/users/$id", params: { id: u.id } })}
                         >
+                          <TableCell className="text-muted-foreground">{(page - 1) * 25 + idx + 1}</TableCell>
                           <TableCell>
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={u.avatar_url ?? undefined} />
@@ -252,15 +255,14 @@ function AdminUsersPage() {
           {/* ── Deleted users ── */}
           <TabsContent value="deleted" className="mt-4 space-y-4">
             <div className="flex items-center justify-end">
-              <span className="text-sm text-muted-foreground">
-                {deletedData?.total ?? 0} deleted accounts
-              </span>
+              <RecordCount count={deletedData?.total} label="deleted accounts" />
             </div>
 
             <div className="rounded-xl border border-border">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">S/N</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Deleted on</TableHead>
                   </TableRow>
@@ -269,7 +271,7 @@ function AdminUsersPage() {
                   {deletedLoading
                     ? Array.from({ length: 8 }).map((_, i) => (
                         <TableRow key={i}>
-                          {Array.from({ length: 2 }).map((__, j) => (
+                          {Array.from({ length: 3 }).map((__, j) => (
                             <TableCell key={j}>
                               <div className="h-4 animate-pulse rounded-full bg-surface" />
                             </TableCell>
@@ -279,13 +281,14 @@ function AdminUsersPage() {
                     : (deletedData?.users ?? []).length === 0
                       ? (
                           <TableRow>
-                            <TableCell colSpan={2} className="py-10 text-center text-sm text-muted-foreground">
+                            <TableCell colSpan={3} className="py-10 text-center text-sm text-muted-foreground">
                               No deleted accounts yet.
                             </TableCell>
                           </TableRow>
                         )
-                      : (deletedData?.users ?? []).map((u) => (
+                      : (deletedData?.users ?? []).map((u, idx) => (
                           <TableRow key={u.email}>
+                            <TableCell className="text-muted-foreground">{(deletedPage - 1) * 25 + idx + 1}</TableCell>
                             <TableCell className="text-sm">{u.email}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               {new Date(u.deleted_at).toLocaleDateString()}
