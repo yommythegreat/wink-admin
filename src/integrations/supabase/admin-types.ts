@@ -118,3 +118,96 @@ export type AdminAdminRow = {
   created_at: string;
   created_by: string | null;
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wink Spots — admin-side row shapes.
+// All rows here describe data returned by /admin/spots/* server functions.
+// Mirrors the column lists in supabase/migrations/20260609000001_cities.sql
+// through 20260609000010_spot_suggestion_notify.sql.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AdminCityRow = {
+  id: string;
+  name: string;
+  slug: string;
+  country: string | null;
+  center_lat: number;
+  center_lng: number;
+  radius_m: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // Optional aggregate fields filled in by getCities for the dashboard list.
+  spot_count?: number;
+  member_count?: number;
+};
+
+export type AdminSpotCategoryRow = {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminSpotRow = {
+  id: string;
+  city_id: string;
+  city_name: string | null;
+  category_id: string;
+  category_name: string | null;
+  category_icon: string | null;
+  name: string;
+  description: string | null;
+  address: string | null;
+  cover_image_url: string | null;
+  lat: number | null;
+  lng: number | null;
+  is_active: boolean;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+  member_count: number;
+};
+
+export type AdminSpotSuggestionRow = {
+  id: string;
+  submitted_by: string;
+  submitter_name: string | null;
+  submitter_email: string | null;
+  name: string;
+  category_id: string | null;
+  category_text: string | null;
+  city_id: string | null;
+  city_text: string | null;
+  address: string | null;
+  notes: string | null;
+  status: "pending" | "approved" | "rejected" | "converted";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  converted_spot_id: string | null;
+  created_at: string;
+};
+
+export type AdminSpotAnalyticsRow = {
+  spot_id: string;
+  spot_name: string;
+  total_members: number;
+  available_to_connect: number;
+  total_winks_sent: number;
+  total_winks_received: number;
+  total_matches: number;
+};
+
+export type AdminCityAnalyticsRow = {
+  city_id: string;
+  city_name: string;
+  total_spots: number;
+  total_members: number;
+  total_matches: number;
+  // Users with 2+ active memberships in the city — a rough "repeat visit" proxy.
+  repeat_members: number;
+};

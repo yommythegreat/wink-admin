@@ -17,12 +17,21 @@ import { Route as AuthenticatedAdminAdminRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
 import { Route as AuthenticatedAdminAdminSubscriptionsRouteImport } from './routes/_authenticated/_admin/admin.subscriptions'
+import { Route as AuthenticatedAdminAdminSpotsRouteImport } from './routes/_authenticated/_admin/admin.spots'
+import { Route as AuthenticatedAdminAdminSpotSuggestionsRouteImport } from './routes/_authenticated/_admin/admin.spot-suggestions'
+import { Route as AuthenticatedAdminAdminSpotAnalyticsRouteImport } from './routes/_authenticated/_admin/admin.spot-analytics'
 import { Route as AuthenticatedAdminAdminModerationRouteImport } from './routes/_authenticated/_admin/admin.moderation'
 import { Route as AuthenticatedAdminAdminGuideRouteImport } from './routes/_authenticated/_admin/admin.guide'
 import { Route as AuthenticatedAdminAdminConfigRouteImport } from './routes/_authenticated/_admin/admin.config'
+import { Route as AuthenticatedAdminAdminCitiesRouteImport } from './routes/_authenticated/_admin/admin.cities'
+import { Route as AuthenticatedAdminAdminCategoriesRouteImport } from './routes/_authenticated/_admin/admin.categories'
 import { Route as AuthenticatedAdminAdminAdminsRouteImport } from './routes/_authenticated/_admin/admin.admins'
 import { Route as AuthenticatedAdminAdminUsersIndexRouteImport } from './routes/_authenticated/_admin/admin.users.index'
+import { Route as AuthenticatedAdminAdminCitiesIndexRouteImport } from './routes/_authenticated/_admin/admin.cities.index'
+import { Route as AuthenticatedAdminAdminCategoriesIndexRouteImport } from './routes/_authenticated/_admin/admin.categories.index'
 import { Route as AuthenticatedAdminAdminUsersIdRouteImport } from './routes/_authenticated/_admin/admin.users.$id'
+import { Route as AuthenticatedAdminAdminCitiesCityIdRouteImport } from './routes/_authenticated/_admin/admin.cities.$cityId'
+import { Route as AuthenticatedAdminAdminCategoriesCategoryIdRouteImport } from './routes/_authenticated/_admin/admin.categories.$categoryId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -65,6 +74,24 @@ const AuthenticatedAdminAdminSubscriptionsRoute =
     path: '/subscriptions',
     getParentRoute: () => AuthenticatedAdminAdminRoute,
   } as any)
+const AuthenticatedAdminAdminSpotsRoute =
+  AuthenticatedAdminAdminSpotsRouteImport.update({
+    id: '/spots',
+    path: '/spots',
+    getParentRoute: () => AuthenticatedAdminAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminSpotSuggestionsRoute =
+  AuthenticatedAdminAdminSpotSuggestionsRouteImport.update({
+    id: '/spot-suggestions',
+    path: '/spot-suggestions',
+    getParentRoute: () => AuthenticatedAdminAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminSpotAnalyticsRoute =
+  AuthenticatedAdminAdminSpotAnalyticsRouteImport.update({
+    id: '/spot-analytics',
+    path: '/spot-analytics',
+    getParentRoute: () => AuthenticatedAdminAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminModerationRoute =
   AuthenticatedAdminAdminModerationRouteImport.update({
     id: '/moderation',
@@ -83,6 +110,18 @@ const AuthenticatedAdminAdminConfigRoute =
     path: '/config',
     getParentRoute: () => AuthenticatedAdminAdminRoute,
   } as any)
+const AuthenticatedAdminAdminCitiesRoute =
+  AuthenticatedAdminAdminCitiesRouteImport.update({
+    id: '/cities',
+    path: '/cities',
+    getParentRoute: () => AuthenticatedAdminAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminCategoriesRoute =
+  AuthenticatedAdminAdminCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AuthenticatedAdminAdminRoute,
+  } as any)
 const AuthenticatedAdminAdminAdminsRoute =
   AuthenticatedAdminAdminAdminsRouteImport.update({
     id: '/admins',
@@ -95,11 +134,35 @@ const AuthenticatedAdminAdminUsersIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAdminAdminUsersRoute,
   } as any)
+const AuthenticatedAdminAdminCitiesIndexRoute =
+  AuthenticatedAdminAdminCitiesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminAdminCitiesRoute,
+  } as any)
+const AuthenticatedAdminAdminCategoriesIndexRoute =
+  AuthenticatedAdminAdminCategoriesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminAdminCategoriesRoute,
+  } as any)
 const AuthenticatedAdminAdminUsersIdRoute =
   AuthenticatedAdminAdminUsersIdRouteImport.update({
     id: '/$id',
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminAdminUsersRoute,
+  } as any)
+const AuthenticatedAdminAdminCitiesCityIdRoute =
+  AuthenticatedAdminAdminCitiesCityIdRouteImport.update({
+    id: '/$cityId',
+    path: '/$cityId',
+    getParentRoute: () => AuthenticatedAdminAdminCitiesRoute,
+  } as any)
+const AuthenticatedAdminAdminCategoriesCategoryIdRoute =
+  AuthenticatedAdminAdminCategoriesCategoryIdRouteImport.update({
+    id: '/$categoryId',
+    path: '/$categoryId',
+    getParentRoute: () => AuthenticatedAdminAdminCategoriesRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -107,13 +170,22 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AuthenticatedAdminAdminRouteWithChildren
   '/admin/admins': typeof AuthenticatedAdminAdminAdminsRoute
+  '/admin/categories': typeof AuthenticatedAdminAdminCategoriesRouteWithChildren
+  '/admin/cities': typeof AuthenticatedAdminAdminCitiesRouteWithChildren
   '/admin/config': typeof AuthenticatedAdminAdminConfigRoute
   '/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
   '/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
+  '/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
+  '/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
+  '/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
   '/admin/subscriptions': typeof AuthenticatedAdminAdminSubscriptionsRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRouteWithChildren
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/categories/$categoryId': typeof AuthenticatedAdminAdminCategoriesCategoryIdRoute
+  '/admin/cities/$cityId': typeof AuthenticatedAdminAdminCitiesCityIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminAdminUsersIdRoute
+  '/admin/categories/': typeof AuthenticatedAdminAdminCategoriesIndexRoute
+  '/admin/cities/': typeof AuthenticatedAdminAdminCitiesIndexRoute
   '/admin/users/': typeof AuthenticatedAdminAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -123,9 +195,16 @@ export interface FileRoutesByTo {
   '/admin/config': typeof AuthenticatedAdminAdminConfigRoute
   '/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
   '/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
+  '/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
+  '/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
+  '/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
   '/admin/subscriptions': typeof AuthenticatedAdminAdminSubscriptionsRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
+  '/admin/categories/$categoryId': typeof AuthenticatedAdminAdminCategoriesCategoryIdRoute
+  '/admin/cities/$cityId': typeof AuthenticatedAdminAdminCitiesCityIdRoute
   '/admin/users/$id': typeof AuthenticatedAdminAdminUsersIdRoute
+  '/admin/categories': typeof AuthenticatedAdminAdminCategoriesIndexRoute
+  '/admin/cities': typeof AuthenticatedAdminAdminCitiesIndexRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersIndexRoute
 }
 export interface FileRoutesById {
@@ -136,13 +215,22 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/_authenticated/_admin/admin': typeof AuthenticatedAdminAdminRouteWithChildren
   '/_authenticated/_admin/admin/admins': typeof AuthenticatedAdminAdminAdminsRoute
+  '/_authenticated/_admin/admin/categories': typeof AuthenticatedAdminAdminCategoriesRouteWithChildren
+  '/_authenticated/_admin/admin/cities': typeof AuthenticatedAdminAdminCitiesRouteWithChildren
   '/_authenticated/_admin/admin/config': typeof AuthenticatedAdminAdminConfigRoute
   '/_authenticated/_admin/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
   '/_authenticated/_admin/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
+  '/_authenticated/_admin/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
+  '/_authenticated/_admin/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
+  '/_authenticated/_admin/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
   '/_authenticated/_admin/admin/subscriptions': typeof AuthenticatedAdminAdminSubscriptionsRoute
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRouteWithChildren
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
+  '/_authenticated/_admin/admin/categories/$categoryId': typeof AuthenticatedAdminAdminCategoriesCategoryIdRoute
+  '/_authenticated/_admin/admin/cities/$cityId': typeof AuthenticatedAdminAdminCitiesCityIdRoute
   '/_authenticated/_admin/admin/users/$id': typeof AuthenticatedAdminAdminUsersIdRoute
+  '/_authenticated/_admin/admin/categories/': typeof AuthenticatedAdminAdminCategoriesIndexRoute
+  '/_authenticated/_admin/admin/cities/': typeof AuthenticatedAdminAdminCitiesIndexRoute
   '/_authenticated/_admin/admin/users/': typeof AuthenticatedAdminAdminUsersIndexRoute
 }
 export interface FileRouteTypes {
@@ -152,13 +240,22 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin'
     | '/admin/admins'
+    | '/admin/categories'
+    | '/admin/cities'
     | '/admin/config'
     | '/admin/guide'
     | '/admin/moderation'
+    | '/admin/spot-analytics'
+    | '/admin/spot-suggestions'
+    | '/admin/spots'
     | '/admin/subscriptions'
     | '/admin/users'
     | '/admin/'
+    | '/admin/categories/$categoryId'
+    | '/admin/cities/$cityId'
     | '/admin/users/$id'
+    | '/admin/categories/'
+    | '/admin/cities/'
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -168,9 +265,16 @@ export interface FileRouteTypes {
     | '/admin/config'
     | '/admin/guide'
     | '/admin/moderation'
+    | '/admin/spot-analytics'
+    | '/admin/spot-suggestions'
+    | '/admin/spots'
     | '/admin/subscriptions'
     | '/admin'
+    | '/admin/categories/$categoryId'
+    | '/admin/cities/$cityId'
     | '/admin/users/$id'
+    | '/admin/categories'
+    | '/admin/cities'
     | '/admin/users'
   id:
     | '__root__'
@@ -180,13 +284,22 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/_authenticated/_admin/admin'
     | '/_authenticated/_admin/admin/admins'
+    | '/_authenticated/_admin/admin/categories'
+    | '/_authenticated/_admin/admin/cities'
     | '/_authenticated/_admin/admin/config'
     | '/_authenticated/_admin/admin/guide'
     | '/_authenticated/_admin/admin/moderation'
+    | '/_authenticated/_admin/admin/spot-analytics'
+    | '/_authenticated/_admin/admin/spot-suggestions'
+    | '/_authenticated/_admin/admin/spots'
     | '/_authenticated/_admin/admin/subscriptions'
     | '/_authenticated/_admin/admin/users'
     | '/_authenticated/_admin/admin/'
+    | '/_authenticated/_admin/admin/categories/$categoryId'
+    | '/_authenticated/_admin/admin/cities/$cityId'
     | '/_authenticated/_admin/admin/users/$id'
+    | '/_authenticated/_admin/admin/categories/'
+    | '/_authenticated/_admin/admin/cities/'
     | '/_authenticated/_admin/admin/users/'
   fileRoutesById: FileRoutesById
 }
@@ -254,6 +367,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminSubscriptionsRouteImport
       parentRoute: typeof AuthenticatedAdminAdminRoute
     }
+    '/_authenticated/_admin/admin/spots': {
+      id: '/_authenticated/_admin/admin/spots'
+      path: '/spots'
+      fullPath: '/admin/spots'
+      preLoaderRoute: typeof AuthenticatedAdminAdminSpotsRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminRoute
+    }
+    '/_authenticated/_admin/admin/spot-suggestions': {
+      id: '/_authenticated/_admin/admin/spot-suggestions'
+      path: '/spot-suggestions'
+      fullPath: '/admin/spot-suggestions'
+      preLoaderRoute: typeof AuthenticatedAdminAdminSpotSuggestionsRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminRoute
+    }
+    '/_authenticated/_admin/admin/spot-analytics': {
+      id: '/_authenticated/_admin/admin/spot-analytics'
+      path: '/spot-analytics'
+      fullPath: '/admin/spot-analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAdminSpotAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminRoute
+    }
     '/_authenticated/_admin/admin/moderation': {
       id: '/_authenticated/_admin/admin/moderation'
       path: '/moderation'
@@ -275,6 +409,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminConfigRouteImport
       parentRoute: typeof AuthenticatedAdminAdminRoute
     }
+    '/_authenticated/_admin/admin/cities': {
+      id: '/_authenticated/_admin/admin/cities'
+      path: '/cities'
+      fullPath: '/admin/cities'
+      preLoaderRoute: typeof AuthenticatedAdminAdminCitiesRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminRoute
+    }
+    '/_authenticated/_admin/admin/categories': {
+      id: '/_authenticated/_admin/admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AuthenticatedAdminAdminCategoriesRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminRoute
+    }
     '/_authenticated/_admin/admin/admins': {
       id: '/_authenticated/_admin/admin/admins'
       path: '/admins'
@@ -289,6 +437,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminUsersIndexRouteImport
       parentRoute: typeof AuthenticatedAdminAdminUsersRoute
     }
+    '/_authenticated/_admin/admin/cities/': {
+      id: '/_authenticated/_admin/admin/cities/'
+      path: '/'
+      fullPath: '/admin/cities/'
+      preLoaderRoute: typeof AuthenticatedAdminAdminCitiesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminCitiesRoute
+    }
+    '/_authenticated/_admin/admin/categories/': {
+      id: '/_authenticated/_admin/admin/categories/'
+      path: '/'
+      fullPath: '/admin/categories/'
+      preLoaderRoute: typeof AuthenticatedAdminAdminCategoriesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminCategoriesRoute
+    }
     '/_authenticated/_admin/admin/users/$id': {
       id: '/_authenticated/_admin/admin/users/$id'
       path: '/$id'
@@ -296,8 +458,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminUsersIdRouteImport
       parentRoute: typeof AuthenticatedAdminAdminUsersRoute
     }
+    '/_authenticated/_admin/admin/cities/$cityId': {
+      id: '/_authenticated/_admin/admin/cities/$cityId'
+      path: '/$cityId'
+      fullPath: '/admin/cities/$cityId'
+      preLoaderRoute: typeof AuthenticatedAdminAdminCitiesCityIdRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminCitiesRoute
+    }
+    '/_authenticated/_admin/admin/categories/$categoryId': {
+      id: '/_authenticated/_admin/admin/categories/$categoryId'
+      path: '/$categoryId'
+      fullPath: '/admin/categories/$categoryId'
+      preLoaderRoute: typeof AuthenticatedAdminAdminCategoriesCategoryIdRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminCategoriesRoute
+    }
   }
 }
+
+interface AuthenticatedAdminAdminCategoriesRouteChildren {
+  AuthenticatedAdminAdminCategoriesCategoryIdRoute: typeof AuthenticatedAdminAdminCategoriesCategoryIdRoute
+  AuthenticatedAdminAdminCategoriesIndexRoute: typeof AuthenticatedAdminAdminCategoriesIndexRoute
+}
+
+const AuthenticatedAdminAdminCategoriesRouteChildren: AuthenticatedAdminAdminCategoriesRouteChildren =
+  {
+    AuthenticatedAdminAdminCategoriesCategoryIdRoute:
+      AuthenticatedAdminAdminCategoriesCategoryIdRoute,
+    AuthenticatedAdminAdminCategoriesIndexRoute:
+      AuthenticatedAdminAdminCategoriesIndexRoute,
+  }
+
+const AuthenticatedAdminAdminCategoriesRouteWithChildren =
+  AuthenticatedAdminAdminCategoriesRoute._addFileChildren(
+    AuthenticatedAdminAdminCategoriesRouteChildren,
+  )
+
+interface AuthenticatedAdminAdminCitiesRouteChildren {
+  AuthenticatedAdminAdminCitiesCityIdRoute: typeof AuthenticatedAdminAdminCitiesCityIdRoute
+  AuthenticatedAdminAdminCitiesIndexRoute: typeof AuthenticatedAdminAdminCitiesIndexRoute
+}
+
+const AuthenticatedAdminAdminCitiesRouteChildren: AuthenticatedAdminAdminCitiesRouteChildren =
+  {
+    AuthenticatedAdminAdminCitiesCityIdRoute:
+      AuthenticatedAdminAdminCitiesCityIdRoute,
+    AuthenticatedAdminAdminCitiesIndexRoute:
+      AuthenticatedAdminAdminCitiesIndexRoute,
+  }
+
+const AuthenticatedAdminAdminCitiesRouteWithChildren =
+  AuthenticatedAdminAdminCitiesRoute._addFileChildren(
+    AuthenticatedAdminAdminCitiesRouteChildren,
+  )
 
 interface AuthenticatedAdminAdminUsersRouteChildren {
   AuthenticatedAdminAdminUsersIdRoute: typeof AuthenticatedAdminAdminUsersIdRoute
@@ -318,9 +530,14 @@ const AuthenticatedAdminAdminUsersRouteWithChildren =
 
 interface AuthenticatedAdminAdminRouteChildren {
   AuthenticatedAdminAdminAdminsRoute: typeof AuthenticatedAdminAdminAdminsRoute
+  AuthenticatedAdminAdminCategoriesRoute: typeof AuthenticatedAdminAdminCategoriesRouteWithChildren
+  AuthenticatedAdminAdminCitiesRoute: typeof AuthenticatedAdminAdminCitiesRouteWithChildren
   AuthenticatedAdminAdminConfigRoute: typeof AuthenticatedAdminAdminConfigRoute
   AuthenticatedAdminAdminGuideRoute: typeof AuthenticatedAdminAdminGuideRoute
   AuthenticatedAdminAdminModerationRoute: typeof AuthenticatedAdminAdminModerationRoute
+  AuthenticatedAdminAdminSpotAnalyticsRoute: typeof AuthenticatedAdminAdminSpotAnalyticsRoute
+  AuthenticatedAdminAdminSpotSuggestionsRoute: typeof AuthenticatedAdminAdminSpotSuggestionsRoute
+  AuthenticatedAdminAdminSpotsRoute: typeof AuthenticatedAdminAdminSpotsRoute
   AuthenticatedAdminAdminSubscriptionsRoute: typeof AuthenticatedAdminAdminSubscriptionsRoute
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRouteWithChildren
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
@@ -329,10 +546,19 @@ interface AuthenticatedAdminAdminRouteChildren {
 const AuthenticatedAdminAdminRouteChildren: AuthenticatedAdminAdminRouteChildren =
   {
     AuthenticatedAdminAdminAdminsRoute: AuthenticatedAdminAdminAdminsRoute,
+    AuthenticatedAdminAdminCategoriesRoute:
+      AuthenticatedAdminAdminCategoriesRouteWithChildren,
+    AuthenticatedAdminAdminCitiesRoute:
+      AuthenticatedAdminAdminCitiesRouteWithChildren,
     AuthenticatedAdminAdminConfigRoute: AuthenticatedAdminAdminConfigRoute,
     AuthenticatedAdminAdminGuideRoute: AuthenticatedAdminAdminGuideRoute,
     AuthenticatedAdminAdminModerationRoute:
       AuthenticatedAdminAdminModerationRoute,
+    AuthenticatedAdminAdminSpotAnalyticsRoute:
+      AuthenticatedAdminAdminSpotAnalyticsRoute,
+    AuthenticatedAdminAdminSpotSuggestionsRoute:
+      AuthenticatedAdminAdminSpotSuggestionsRoute,
+    AuthenticatedAdminAdminSpotsRoute: AuthenticatedAdminAdminSpotsRoute,
     AuthenticatedAdminAdminSubscriptionsRoute:
       AuthenticatedAdminAdminSubscriptionsRoute,
     AuthenticatedAdminAdminUsersRoute:

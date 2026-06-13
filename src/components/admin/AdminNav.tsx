@@ -8,6 +8,11 @@ import {
   UserCog,
   BookOpen,
   Settings2,
+  MapPin,
+  Tags,
+  Sparkles,
+  Lightbulb,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -24,6 +29,13 @@ export function AdminNav() {
     { to: "/admin/users", label: "Users", icon: Users, exact: false },
     { to: "/admin/moderation", label: "Moderation", icon: ShieldAlert, exact: false },
     { to: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, exact: false },
+    // Wink Spots admin surfaces, grouped by data model order:
+    // Cities → Categories → Spots → Suggestions queue → Analytics.
+    { to: "/admin/cities", label: "Cities", icon: MapPin, exact: false },
+    { to: "/admin/categories", label: "Categories", icon: Tags, exact: false },
+    { to: "/admin/spots", label: "Spots", icon: Sparkles, exact: false },
+    { to: "/admin/spot-suggestions", label: "Spot suggestions", icon: Lightbulb, exact: false },
+    { to: "/admin/spot-analytics", label: "Spot analytics", icon: BarChart3, exact: false },
     { to: "/admin/config", label: "Configurations", icon: Settings2, exact: false },
     { to: "/admin/guide", label: "Product Guide", icon: BookOpen, exact: false },
     ...(role === "SUPER_ADMIN"
