@@ -318,7 +318,9 @@ function SpotFormDialog({
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -344,6 +346,30 @@ function SpotFormDialog({
       });
     }
   }, [open, mode, spot]);
+
+  // Cover upload also runs only in edit mode (same spotId constraint).
+  // Single file; replaces any existing cover.
+  async function handleCoverUpload(files: FileList | null) {
+    if (!files || files.length === 0 || mode !== "edit" || !spot) return;
+    const file = files[0];
+    setUploadingCover(true);
+    try {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `${spot.id}/cover-${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("spot-gallery")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("spot-gallery").getPublicUrl(path);
+      setDraft((d) => ({ ...d, cover_image_url: pub.publicUrl }));
+      toast.success("Cover uploaded");
+    } catch (err) {
+      toast.error("Upload failed: " + errMessage(err));
+    } finally {
+      setUploadingCover(false);
+      if (coverInputRef.current) coverInputRef.current.value = "";
+    }
+  }
 
   // Gallery upload only runs in edit mode — we need a spot id to namespace
   // the file path. Create mode hides the gallery section until the Spot
@@ -424,8 +450,7 @@ function SpotFormDialog({
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Add spot" : `Edit ${spot?.name ?? ""}`}</DialogTitle>
           <DialogDescription>
-            Each spot belongs to one city and one category. Cover image URL is
-            optional for now (upload coming later).
+            Each spot belongs to one city and one category. {mode === "create" ? "Create the Spot first, then open it again to upload the cover and gallery images." : "Use the cover + gallery sections below to manage Spot images."}
           </DialogDescription>
         </DialogHeader>
 
@@ -457,9 +482,60 @@ function SpotFormDialog({
           <div className="sm:col-span-2">
             <DialogField label="Description" value={draft.description} onChange={(v) => setDraft((d) => ({ ...d, description: v }))} placeholder="What members do here" />
           </div>
-          <div className="sm:col-span-2">
-            <DialogField label="Cover image URL" value={draft.cover_image_url} onChange={(v) => setDraft((d) => ({ ...d, cover_image_url: v }))} placeholder="https://…" />
-          </div>
+          {mode === "edit" && (
+            <div className="sm:col-span-2">
+              <Label className="text-xs text-muted-foreground">Cover image</Label>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Used as the hero image on the user-side Spot detail page and the category list. One image.
+              </p>
+
+              {draft.cover_image_url ? (
+                <div className="mt-3 flex items-start gap-3">
+                  <div className="relative h-28 w-28 overflow-hidden rounded-lg border border-border bg-secondary">
+                    <img src={draft.cover_image_url} alt="" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setDraft((d) => ({ ...d, cover_image_url: "" }))}
+                      aria-label="Remove cover"
+                      className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-background/80 text-foreground shadow hover:bg-background"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => coverInputRef.current?.click()}
+                    disabled={uploadingCover}
+                  >
+                    <Upload className="mr-1.5 h-3.5 w-3.5" />
+                    {uploadingCover ? "Uploading…" : "Replace"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={uploadingCover}
+                >
+                  <Upload className="mr-1.5 h-3.5 w-3.5" />
+                  {uploadingCover ? "Uploading…" : "Upload cover"}
+                </Button>
+              )}
+
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => void handleCoverUpload(e.target.files)}
+              />
+            </div>
+          )}
 
           {mode === "edit" && (
             <div className="sm:col-span-2">

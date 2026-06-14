@@ -88,7 +88,7 @@ function formatValue(field: FieldSpec, value: unknown): string {
 
 /* ----------------------- Component ----------------------- */
 
-type SpotRule = { order: number; title: string; body: string };
+type SpotRule = { order: number; text: string };
 
 function AdminConfigPage() {
   const { session } = useAuth();
@@ -122,10 +122,15 @@ function AdminConfigPage() {
     const rawRules = map.get("spot_rules");
     if (Array.isArray(rawRules)) {
       setRules(
-        (rawRules as SpotRule[])
+        (rawRules as Array<{ order?: number; text?: string; title?: string }>)
           .slice()
+          // Fall back to title if a stale {title,body} row sneaks in pre-migration.
+          .map((r, i) => ({
+            order: typeof r.order === "number" ? r.order : i + 1,
+            text: r.text ?? r.title ?? "",
+          }))
           .sort((a, b) => a.order - b.order)
-          .map((r, i) => ({ order: i + 1, title: r.title ?? "", body: r.body ?? "" })),
+          .map((r, i) => ({ order: i + 1, text: r.text })),
       );
     }
   }, [data]);
@@ -135,11 +140,10 @@ function AdminConfigPage() {
     // storage order, regardless of any in-flight reordering.
     const normalized = rules.map((r, i) => ({
       order: i + 1,
-      title: r.title.trim(),
-      body: r.body.trim(),
+      text: r.text.trim(),
     }));
-    if (normalized.some((r) => !r.title || !r.body)) {
-      toast.error("Every rule needs a title and a body.");
+    if (normalized.some((r) => !r.text)) {
+      toast.error("Every rule needs text.");
       return;
     }
     setSavingRules(true);
@@ -266,23 +270,13 @@ function AdminConfigPage() {
                     </Button>
                   </div>
                 </div>
-                <Input
-                  className="mt-2"
-                  placeholder="Title"
-                  value={rule.title}
-                  onChange={(e) =>
-                    setRules(
-                      rules.map((r, i) => (i === idx ? { ...r, title: e.target.value } : r)),
-                    )
-                  }
-                />
                 <Textarea
                   className="mt-2"
-                  placeholder="Explain the rule…"
-                  value={rule.body}
+                  placeholder="One sentence — the rule, as users will read it."
+                  value={rule.text}
                   onChange={(e) =>
                     setRules(
-                      rules.map((r, i) => (i === idx ? { ...r, body: e.target.value } : r)),
+                      rules.map((r, i) => (i === idx ? { ...r, text: e.target.value } : r)),
                     )
                   }
                 />
@@ -295,7 +289,7 @@ function AdminConfigPage() {
               variant="outline"
               size="sm"
               onClick={() =>
-                setRules([...rules, { order: rules.length + 1, title: "", body: "" }])
+                setRules([...rules, { order: rules.length + 1, text: "" }])
               }
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
