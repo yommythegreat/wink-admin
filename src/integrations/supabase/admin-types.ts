@@ -192,6 +192,17 @@ export type AdminSpotSuggestionRow = {
   created_at: string;
 };
 
+export type AdminLaunchInterestRow = {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  email: string | null;
+  lat: number;
+  lng: number;
+  notified_at: string | null;
+  created_at: string;
+};
+
 export type AdminSpotAnalyticsRow = {
   spot_id: string;
   spot_name: string;

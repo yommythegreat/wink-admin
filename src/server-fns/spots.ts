@@ -17,6 +17,7 @@ import type {
   AdminSpotSuggestionRow,
   AdminSpotAnalyticsRow,
   AdminCityAnalyticsRow,
+  AdminLaunchInterestRow,
 } from "@/integrations/supabase/admin-types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -935,3 +936,50 @@ export const getCityAnalytics = createServerFn({ method: "POST" })
       repeat_members: repeatMap[c.id] ?? 0,
     }));
   });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Launch interest — users whose detected location is outside every launched
+// city. Surfaces demand so admin knows where to launch next. Joined with
+// auth.users for email + profiles for display_name.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getLaunchInterest = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ token: z.string() }))
+  .handler(async ({ data }): Promise<AdminLaunchInterestRow[]> => {
+    await requireAdminUser(data.token);
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("city_launch_interest")
+      .select("id, user_id, lat, lng, notified_at, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    if (!rows || rows.length === 0) return [];
+
+    const userIds = [...new Set(rows.map((r) => r.user_id))];
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", userIds);
+    const { data: authData } = await supabaseAdmin.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+    const nameMap = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+    const emailMap = new Map(
+      (authData?.users ?? [])
+        .filter((u) => userIds.includes(u.id))
+        .map((u) => [u.id, u.email ?? null]),
+    );
+
+    return rows.map((r) => ({
+      id: r.id,
+      user_id: r.user_id,
+      display_name: nameMap.get(r.user_id) ?? null,
+      email: emailMap.get(r.user_id) ?? null,
+      lat: r.lat,
+      lng: r.lng,
+      notified_at: r.notified_at,
+      created_at: r.created_at,
+    }));
+  });
+

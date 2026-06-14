@@ -21,6 +21,7 @@ import { Route as AuthenticatedAdminAdminSpotsRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminAdminSpotSuggestionsRouteImport } from './routes/_authenticated/_admin/admin.spot-suggestions'
 import { Route as AuthenticatedAdminAdminSpotAnalyticsRouteImport } from './routes/_authenticated/_admin/admin.spot-analytics'
 import { Route as AuthenticatedAdminAdminModerationRouteImport } from './routes/_authenticated/_admin/admin.moderation'
+import { Route as AuthenticatedAdminAdminLaunchInterestRouteImport } from './routes/_authenticated/_admin/admin.launch-interest'
 import { Route as AuthenticatedAdminAdminGuideRouteImport } from './routes/_authenticated/_admin/admin.guide'
 import { Route as AuthenticatedAdminAdminConfigRouteImport } from './routes/_authenticated/_admin/admin.config'
 import { Route as AuthenticatedAdminAdminCitiesRouteImport } from './routes/_authenticated/_admin/admin.cities'
@@ -96,6 +97,12 @@ const AuthenticatedAdminAdminModerationRoute =
   AuthenticatedAdminAdminModerationRouteImport.update({
     id: '/moderation',
     path: '/moderation',
+    getParentRoute: () => AuthenticatedAdminAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminLaunchInterestRoute =
+  AuthenticatedAdminAdminLaunchInterestRouteImport.update({
+    id: '/launch-interest',
+    path: '/launch-interest',
     getParentRoute: () => AuthenticatedAdminAdminRoute,
   } as any)
 const AuthenticatedAdminAdminGuideRoute =
@@ -174,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/admin/cities': typeof AuthenticatedAdminAdminCitiesRouteWithChildren
   '/admin/config': typeof AuthenticatedAdminAdminConfigRoute
   '/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
+  '/admin/launch-interest': typeof AuthenticatedAdminAdminLaunchInterestRoute
   '/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
   '/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
   '/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
@@ -194,6 +202,7 @@ export interface FileRoutesByTo {
   '/admin/admins': typeof AuthenticatedAdminAdminAdminsRoute
   '/admin/config': typeof AuthenticatedAdminAdminConfigRoute
   '/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
+  '/admin/launch-interest': typeof AuthenticatedAdminAdminLaunchInterestRoute
   '/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
   '/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
   '/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
@@ -219,6 +228,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/cities': typeof AuthenticatedAdminAdminCitiesRouteWithChildren
   '/_authenticated/_admin/admin/config': typeof AuthenticatedAdminAdminConfigRoute
   '/_authenticated/_admin/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
+  '/_authenticated/_admin/admin/launch-interest': typeof AuthenticatedAdminAdminLaunchInterestRoute
   '/_authenticated/_admin/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
   '/_authenticated/_admin/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
   '/_authenticated/_admin/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/admin/cities'
     | '/admin/config'
     | '/admin/guide'
+    | '/admin/launch-interest'
     | '/admin/moderation'
     | '/admin/spot-analytics'
     | '/admin/spot-suggestions'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/admin/admins'
     | '/admin/config'
     | '/admin/guide'
+    | '/admin/launch-interest'
     | '/admin/moderation'
     | '/admin/spot-analytics'
     | '/admin/spot-suggestions'
@@ -288,6 +300,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/cities'
     | '/_authenticated/_admin/admin/config'
     | '/_authenticated/_admin/admin/guide'
+    | '/_authenticated/_admin/admin/launch-interest'
     | '/_authenticated/_admin/admin/moderation'
     | '/_authenticated/_admin/admin/spot-analytics'
     | '/_authenticated/_admin/admin/spot-suggestions'
@@ -393,6 +406,13 @@ declare module '@tanstack/react-router' {
       path: '/moderation'
       fullPath: '/admin/moderation'
       preLoaderRoute: typeof AuthenticatedAdminAdminModerationRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminRoute
+    }
+    '/_authenticated/_admin/admin/launch-interest': {
+      id: '/_authenticated/_admin/admin/launch-interest'
+      path: '/launch-interest'
+      fullPath: '/admin/launch-interest'
+      preLoaderRoute: typeof AuthenticatedAdminAdminLaunchInterestRouteImport
       parentRoute: typeof AuthenticatedAdminAdminRoute
     }
     '/_authenticated/_admin/admin/guide': {
@@ -534,6 +554,7 @@ interface AuthenticatedAdminAdminRouteChildren {
   AuthenticatedAdminAdminCitiesRoute: typeof AuthenticatedAdminAdminCitiesRouteWithChildren
   AuthenticatedAdminAdminConfigRoute: typeof AuthenticatedAdminAdminConfigRoute
   AuthenticatedAdminAdminGuideRoute: typeof AuthenticatedAdminAdminGuideRoute
+  AuthenticatedAdminAdminLaunchInterestRoute: typeof AuthenticatedAdminAdminLaunchInterestRoute
   AuthenticatedAdminAdminModerationRoute: typeof AuthenticatedAdminAdminModerationRoute
   AuthenticatedAdminAdminSpotAnalyticsRoute: typeof AuthenticatedAdminAdminSpotAnalyticsRoute
   AuthenticatedAdminAdminSpotSuggestionsRoute: typeof AuthenticatedAdminAdminSpotSuggestionsRoute
@@ -552,6 +573,8 @@ const AuthenticatedAdminAdminRouteChildren: AuthenticatedAdminAdminRouteChildren
       AuthenticatedAdminAdminCitiesRouteWithChildren,
     AuthenticatedAdminAdminConfigRoute: AuthenticatedAdminAdminConfigRoute,
     AuthenticatedAdminAdminGuideRoute: AuthenticatedAdminAdminGuideRoute,
+    AuthenticatedAdminAdminLaunchInterestRoute:
+      AuthenticatedAdminAdminLaunchInterestRoute,
     AuthenticatedAdminAdminModerationRoute:
       AuthenticatedAdminAdminModerationRoute,
     AuthenticatedAdminAdminSpotAnalyticsRoute:
