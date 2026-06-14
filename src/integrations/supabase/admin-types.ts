@@ -164,6 +164,7 @@ export type AdminSpotRow = {
   description: string | null;
   address: string | null;
   cover_image_url: string | null;
+  gallery_image_urls: string[];
   lat: number | null;
   lng: number | null;
   is_active: boolean;

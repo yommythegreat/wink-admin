@@ -956,6 +956,10 @@ const APP_CONFIG_KEYS = [
   "free_session_minutes",
   "paid_session_options_minutes",
   "free_daily_session_cap",
+  // Global Spot rules — JSON array of { order, title, body }. Shown to
+  // users in a modal every time they tap Join Spot (no per-user accept
+  // tracking; the modal is shown unconditionally).
+  "spot_rules",
 ] as const;
 type AppConfigKey = (typeof APP_CONFIG_KEYS)[number];
 

@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAdminQuery } from "@/hooks/use-admin-query";
@@ -86,6 +88,8 @@ function formatValue(field: FieldSpec, value: unknown): string {
 
 /* ----------------------- Component ----------------------- */
 
+type SpotRule = { order: number; title: string; body: string };
+
 function AdminConfigPage() {
   const { session } = useAuth();
   const token = session?.access_token ?? "";
@@ -99,6 +103,11 @@ function AdminConfigPage() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
 
+  // Spot rules editor state — kept separate from the numeric/array config
+  // because its value shape is a list of objects, not a primitive.
+  const [rules, setRules] = useState<SpotRule[]>([]);
+  const [savingRules, setSavingRules] = useState(false);
+
   // Seed the draft from fetched values once.
   useEffect(() => {
     if (!data) return;
@@ -110,7 +119,54 @@ function AdminConfigPage() {
       next[field.key] = formatValue(field, map.get(field.key));
     }
     setDraft(next);
+    const rawRules = map.get("spot_rules");
+    if (Array.isArray(rawRules)) {
+      setRules(
+        (rawRules as SpotRule[])
+          .slice()
+          .sort((a, b) => a.order - b.order)
+          .map((r, i) => ({ order: i + 1, title: r.title ?? "", body: r.body ?? "" })),
+      );
+    }
   }, [data]);
+
+  async function saveRules() {
+    // Re-number sequentially before persisting so display order matches
+    // storage order, regardless of any in-flight reordering.
+    const normalized = rules.map((r, i) => ({
+      order: i + 1,
+      title: r.title.trim(),
+      body: r.body.trim(),
+    }));
+    if (normalized.some((r) => !r.title || !r.body)) {
+      toast.error("Every rule needs a title and a body.");
+      return;
+    }
+    setSavingRules(true);
+    try {
+      await updateAppConfig({
+        data: {
+          token,
+          key: "spot_rules" as never,
+          value: normalized,
+        },
+      });
+      toast.success("Spot rules saved");
+      await refetch();
+    } catch (err) {
+      toast.error("Couldn't save: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setSavingRules(false);
+    }
+  }
+
+  function moveRule(idx: number, dir: -1 | 1) {
+    const next = rules.slice();
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setRules(next);
+  }
 
   async function handleSave(field: FieldSpec) {
     const raw = draft[field.key] ?? "";
@@ -159,6 +215,96 @@ function AdminConfigPage() {
             the next time a user loads a page (or up to 5 minutes for already-open
             sessions). Pricing and Stripe IDs are managed separately.
           </p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-5">
+          <Label className="text-sm font-medium text-foreground">Spot rules</Label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Shown to users in a modal every time they tap &quot;Join Spot&quot;.
+            They must agree before joining. Order top-to-bottom.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            {rules.map((rule, idx) => (
+              <div
+                key={idx}
+                className="rounded-lg border border-border bg-background/40 p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-wink">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => moveRule(idx, -1)}
+                      disabled={idx === 0}
+                      aria-label="Move up"
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => moveRule(idx, 1)}
+                      disabled={idx === rules.length - 1}
+                      aria-label="Move down"
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => setRules(rules.filter((_, i) => i !== idx))}
+                      aria-label="Remove rule"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                <Input
+                  className="mt-2"
+                  placeholder="Title"
+                  value={rule.title}
+                  onChange={(e) =>
+                    setRules(
+                      rules.map((r, i) => (i === idx ? { ...r, title: e.target.value } : r)),
+                    )
+                  }
+                />
+                <Textarea
+                  className="mt-2"
+                  placeholder="Explain the rule…"
+                  value={rule.body}
+                  onChange={(e) =>
+                    setRules(
+                      rules.map((r, i) => (i === idx ? { ...r, body: e.target.value } : r)),
+                    )
+                  }
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setRules([...rules, { order: rules.length + 1, title: "", body: "" }])
+              }
+            >
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Add rule
+            </Button>
+            <Button onClick={saveRules} disabled={savingRules || isLoading} size="sm">
+              {savingRules ? "Saving…" : "Save rules"}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-4">

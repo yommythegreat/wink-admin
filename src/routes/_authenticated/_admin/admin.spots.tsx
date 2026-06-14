@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Upload, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminBadge } from "@/components/admin/AdminBadge";
 import { AdminConfirmAction } from "@/components/admin/AdminConfirmAction";
@@ -313,8 +314,11 @@ function SpotFormDialog({
     description: "",
     address: "",
     cover_image_url: "",
+    gallery_image_urls: [] as string[],
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -326,11 +330,48 @@ function SpotFormDialog({
         description: spot.description ?? "",
         address: spot.address ?? "",
         cover_image_url: spot.cover_image_url ?? "",
+        gallery_image_urls: spot.gallery_image_urls ?? [],
       });
     } else {
-      setDraft({ city_id: "", category_id: "", name: "", description: "", address: "", cover_image_url: "" });
+      setDraft({
+        city_id: "",
+        category_id: "",
+        name: "",
+        description: "",
+        address: "",
+        cover_image_url: "",
+        gallery_image_urls: [],
+      });
     }
   }, [open, mode, spot]);
+
+  // Gallery upload only runs in edit mode — we need a spot id to namespace
+  // the file path. Create mode hides the gallery section until the Spot
+  // exists (see plan §3).
+  async function handleGalleryUpload(files: FileList | null) {
+    if (!files || files.length === 0 || mode !== "edit" || !spot) return;
+    setUploading(true);
+    const uploaded: string[] = [];
+    try {
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop() ?? "jpg";
+        const path = `${spot.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("spot-gallery")
+          .upload(path, file, { cacheControl: "3600", upsert: false });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("spot-gallery").getPublicUrl(path);
+        uploaded.push(pub.publicUrl);
+      }
+      setDraft((d) => ({ ...d, gallery_image_urls: [...d.gallery_image_urls, ...uploaded] }));
+      toast.success(`Uploaded ${uploaded.length} image${uploaded.length === 1 ? "" : "s"}`);
+    } catch (err) {
+      toast.error("Upload failed: " + errMessage(err));
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   async function submit() {
     if (!draft.city_id || !draft.category_id || !draft.name) {
@@ -363,6 +404,7 @@ function SpotFormDialog({
             description: draft.description || null,
             address: draft.address || null,
             cover_image_url: draft.cover_image_url || null,
+            gallery_image_urls: draft.gallery_image_urls,
           },
         });
         toast.success("Saved");
@@ -418,6 +460,61 @@ function SpotFormDialog({
           <div className="sm:col-span-2">
             <DialogField label="Cover image URL" value={draft.cover_image_url} onChange={(v) => setDraft((d) => ({ ...d, cover_image_url: v }))} placeholder="https://…" />
           </div>
+
+          {mode === "edit" && (
+            <div className="sm:col-span-2">
+              <Label className="text-xs text-muted-foreground">Gallery images</Label>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Shown to users in the &quot;Inside the Spot&quot; carousel on the Spot detail page. Section is hidden when empty.
+              </p>
+
+              {draft.gallery_image_urls.length > 0 && (
+                <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {draft.gallery_image_urls.map((url) => (
+                    <div
+                      key={url}
+                      className="relative aspect-square overflow-hidden rounded-lg border border-border bg-secondary"
+                    >
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDraft((d) => ({
+                            ...d,
+                            gallery_image_urls: d.gallery_image_urls.filter((u) => u !== url),
+                          }))
+                        }
+                        aria-label="Remove image"
+                        className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-background/80 text-foreground shadow hover:bg-background"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={(e) => void handleGalleryUpload(e.target.files)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                {uploading ? "Uploading…" : "Add images"}
+              </Button>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
