@@ -98,9 +98,9 @@ function AdminCityDetailPage() {
             <AdminBadge status={city.is_active ? "active" : "offline"} />
           </div>
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
-            <SummaryItem label="Latitude" value={city.center_lat.toFixed(4)} />
-            <SummaryItem label="Longitude" value={city.center_lng.toFixed(4)} />
-            <SummaryItem label="Radius" value={`${(city.radius_m / 1000).toFixed(1)} km`} />
+            <SummaryItem label="Latitude" value={city.center_lat != null ? city.center_lat.toFixed(4) : "—"} />
+            <SummaryItem label="Longitude" value={city.center_lng != null ? city.center_lng.toFixed(4) : "—"} />
+            <SummaryItem label="Radius" value={city.radius_m != null ? `${(city.radius_m / 1000).toFixed(1)} km` : "—"} />
             <SummaryItem label="Created" value={new Date(city.created_at).toLocaleDateString()} />
           </dl>
         </div>

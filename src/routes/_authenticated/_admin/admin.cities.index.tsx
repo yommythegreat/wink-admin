@@ -162,13 +162,13 @@ function AdminCitiesPage() {
                       <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
                       <TableCell className="font-medium">{city.name}</TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {city.center_lng.toFixed(4)}
+                        {city.center_lng != null ? city.center_lng.toFixed(4) : "—"}
                       </TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {city.center_lat.toFixed(4)}
+                        {city.center_lat != null ? city.center_lat.toFixed(4) : "—"}
                       </TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {(city.radius_m / 1000).toFixed(1)}
+                        {city.radius_m != null ? (city.radius_m / 1000).toFixed(1) : "—"}
                       </TableCell>
                       <TableCell>
                         <AdminBadge status={city.is_active ? "active" : "offline"} />
@@ -276,35 +276,56 @@ function CityFormDialog({
     country: "",
     center_lat: "",
     center_lng: "",
-    radius_m: "25000",
+    radius_m: "",
   });
   const [saving, setSaving] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Re-seed whenever the dialog opens — create-mode resets; edit-mode loads
   // the target city's current values so the form mirrors the row.
   useEffect(() => {
     if (!open) return;
+    setShowAdvanced(false);
     if (mode === "edit" && city) {
       setDraft({
         name: city.name,
         slug: city.slug,
         country: city.country ?? "",
-        center_lat: String(city.center_lat),
-        center_lng: String(city.center_lng),
-        radius_m: String(city.radius_m),
+        center_lat: city.center_lat != null ? String(city.center_lat) : "",
+        center_lng: city.center_lng != null ? String(city.center_lng) : "",
+        radius_m: city.radius_m != null ? String(city.radius_m) : "",
       });
     } else {
-      setDraft({ name: "", slug: "", country: "", center_lat: "", center_lng: "", radius_m: "25000" });
+      setDraft({ name: "", slug: "", country: "", center_lat: "", center_lng: "", radius_m: "" });
     }
   }, [open, mode, city]);
 
   async function submit() {
-    const lat = Number(draft.center_lat);
-    const lng = Number(draft.center_lng);
-    const radius = Number(draft.radius_m);
-    if (!draft.name || (mode === "create" && !draft.slug) || !Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(radius)) {
-      toast.error("Fill name, slug, and valid numbers for coords + radius.");
+    if (!draft.name || (mode === "create" && !draft.slug)) {
+      toast.error("City name and slug are required.");
       return;
+    }
+    // Coords + radius are optional now. Parse only if the admin actually
+    // filled them in (advanced override). Any partial fill is treated as
+    // invalid so we don't silently store half-set overrides.
+    const anyCoord = draft.center_lat || draft.center_lng || draft.radius_m;
+    let latNum: number | null = null;
+    let lngNum: number | null = null;
+    let radiusNum: number | null = null;
+    if (anyCoord) {
+      latNum = Number(draft.center_lat);
+      lngNum = Number(draft.center_lng);
+      radiusNum = Number(draft.radius_m);
+      if (
+        !Number.isFinite(latNum) ||
+        !Number.isFinite(lngNum) ||
+        !Number.isFinite(radiusNum)
+      ) {
+        toast.error(
+          "If you enter any advanced coord/radius, all three must be valid numbers.",
+        );
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -315,9 +336,9 @@ function CityFormDialog({
             name: draft.name,
             slug: draft.slug,
             country: draft.country.length === 2 ? draft.country : null,
-            center_lat: lat,
-            center_lng: lng,
-            radius_m: radius,
+            center_lat: latNum,
+            center_lng: lngNum,
+            radius_m: radiusNum,
           },
         });
         toast.success(`${draft.name} added`);
@@ -328,9 +349,9 @@ function CityFormDialog({
             id: city.id,
             name: draft.name,
             country: draft.country.length === 2 ? draft.country : null,
-            center_lat: lat,
-            center_lng: lng,
-            radius_m: radius,
+            center_lat: latNum,
+            center_lng: lngNum,
+            radius_m: radiusNum,
           },
         });
         toast.success("Saved");
@@ -350,14 +371,18 @@ function CityFormDialog({
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Add city" : `Edit ${city?.name ?? ""}`}</DialogTitle>
           <DialogDescription>
-            Coordinates + radius define the area we consider this city. A user
-            is &quot;in&quot; the city when their location is within the radius of the
-            center.
+            Admins define cities by name. The app matches users to a city by
+            reading the city name from their device&apos;s address.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <DialogField label="Name" value={draft.name} onChange={(v) => setDraft((d) => ({ ...d, name: v }))} placeholder="Lagos" />
+          <DialogField
+            label="Name"
+            value={draft.name}
+            onChange={(v) => setDraft((d) => ({ ...d, name: v }))}
+            placeholder="Lagos"
+          />
           <DialogField
             label="Slug"
             value={draft.slug}
@@ -365,10 +390,53 @@ function CityFormDialog({
             placeholder="lagos"
             disabled={mode === "edit"}
           />
-          <DialogField label="Country (ISO 2)" value={draft.country} onChange={(v) => setDraft((d) => ({ ...d, country: v }))} placeholder="NG" />
-          <DialogField label="Radius (m)" value={draft.radius_m} onChange={(v) => setDraft((d) => ({ ...d, radius_m: v }))} placeholder="25000" />
-          <DialogField label="Center latitude" value={draft.center_lat} onChange={(v) => setDraft((d) => ({ ...d, center_lat: v }))} placeholder="6.5244" />
-          <DialogField label="Center longitude" value={draft.center_lng} onChange={(v) => setDraft((d) => ({ ...d, center_lng: v }))} placeholder="3.3792" />
+          <div className="sm:col-span-2">
+            <DialogField
+              label="Country (ISO 2)"
+              value={draft.country}
+              onChange={(v) => setDraft((d) => ({ ...d, country: v }))}
+              placeholder="NG"
+            />
+          </div>
+        </div>
+
+        <div className="mt-2 border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            {showAdvanced ? "Hide" : "Show"} advanced (manual coordinates)
+          </button>
+          {showAdvanced && (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <p className="text-[11px] text-muted-foreground sm:col-span-2">
+                Optional. Only fill these in if you want to store a fallback
+                center + radius for this city. Detection uses device-address
+                name matching by default and ignores these unless we ship a
+                haversine fallback later.
+              </p>
+              <DialogField
+                label="Radius (m)"
+                value={draft.radius_m}
+                onChange={(v) => setDraft((d) => ({ ...d, radius_m: v }))}
+                placeholder="25000"
+              />
+              <div />
+              <DialogField
+                label="Center latitude"
+                value={draft.center_lat}
+                onChange={(v) => setDraft((d) => ({ ...d, center_lat: v }))}
+                placeholder="6.5244"
+              />
+              <DialogField
+                label="Center longitude"
+                value={draft.center_lng}
+                onChange={(v) => setDraft((d) => ({ ...d, center_lng: v }))}
+                placeholder="3.3792"
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>

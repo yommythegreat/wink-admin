@@ -126,9 +126,12 @@ export const createCity = createServerFn({ method: "POST" })
         .max(40)
         .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens only"),
       country: z.string().max(2).nullable().optional(),
-      center_lat: z.number().min(-90).max(90),
-      center_lng: z.number().min(-180).max(180),
-      radius_m: z.number().int().min(100).max(500000),
+      // Coords + radius are optional now that user-side detection is
+      // name-based (see migration 20260618000001). They stay as an
+      // admin-override / future fallback.
+      center_lat: z.number().min(-90).max(90).nullable().optional(),
+      center_lng: z.number().min(-180).max(180).nullable().optional(),
+      radius_m: z.number().int().min(100).max(500000).nullable().optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -139,9 +142,9 @@ export const createCity = createServerFn({ method: "POST" })
         name: data.name,
         slug: data.slug,
         country: data.country ?? null,
-        center_lat: data.center_lat,
-        center_lng: data.center_lng,
-        radius_m: data.radius_m,
+        center_lat: data.center_lat ?? null,
+        center_lng: data.center_lng ?? null,
+        radius_m: data.radius_m ?? null,
       })
       .select()
       .single();
@@ -163,9 +166,9 @@ export const updateCity = createServerFn({ method: "POST" })
       id: z.string().uuid(),
       name: z.string().min(1).max(80).optional(),
       country: z.string().max(2).nullable().optional(),
-      center_lat: z.number().min(-90).max(90).optional(),
-      center_lng: z.number().min(-180).max(180).optional(),
-      radius_m: z.number().int().min(100).max(500000).optional(),
+      center_lat: z.number().min(-90).max(90).nullable().optional(),
+      center_lng: z.number().min(-180).max(180).nullable().optional(),
+      radius_m: z.number().int().min(100).max(500000).nullable().optional(),
       is_active: z.boolean().optional(),
     }),
   )

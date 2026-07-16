@@ -131,9 +131,9 @@ export type AdminCityRow = {
   name: string;
   slug: string;
   country: string | null;
-  center_lat: number;
-  center_lng: number;
-  radius_m: number;
+  center_lat: number | null;
+  center_lng: number | null;
+  radius_m: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
