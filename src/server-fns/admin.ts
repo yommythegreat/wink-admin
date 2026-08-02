@@ -5,6 +5,7 @@ import type {
   AdminUserRow,
   AdminReportRow,
   AdminBlockRow,
+  AdminChatDeletionRow,
   AdminSubscriptionRow,
   AdminDashboardStats,
   AdminRoleValue,
@@ -720,6 +721,76 @@ export const getAdminBlocksOnly = createServerFn({ method: "POST" })
     }));
 
     return { blocks, total };
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// User-initiated chat deletions (audit trail)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getAdminChatDeletions = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      token: z.string(),
+      page: z.number().int().min(1).default(1),
+      perPage: z.number().int().min(1).max(100).default(20),
+    }),
+  )
+  .handler(async ({ data }): Promise<{ deletions: AdminChatDeletionRow[]; total: number }> => {
+    await requireAdminUser(data.token);
+
+    const from = (data.page - 1) * data.perPage;
+    const to = from + data.perPage - 1;
+
+    // Rows where a user (not an admin) deleted their own chat. See
+    // migration 20260721000001 + log_user_action RPC + the client call
+    // in wink/src/routes/_authenticated/chats.index.tsx.
+    const { data: rows, count } = await supabaseAdmin
+      .from("admin_audit_log")
+      .select("id, user_id, target_id, payload, created_at", { count: "exact" })
+      .eq("action", "user.delete_chat")
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    const total = count ?? 0;
+    if (!rows || rows.length === 0) return { deletions: [], total };
+
+    // Collect every user id referenced by this page: deleter (user_id) +
+    // other party (payload.other_user_id) — resolve emails + display names.
+    const userIds = new Set<string>();
+    for (const r of rows) {
+      if (r.user_id) userIds.add(r.user_id);
+      const other = (r.payload as { other_user_id?: string } | null)?.other_user_id;
+      if (other) userIds.add(other);
+    }
+
+    const [{ data: authData }, { data: profileRows }] = await Promise.all([
+      supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+      supabaseAdmin.from("profiles").select("id, display_name").in("id", [...userIds]),
+    ]);
+    const emailMap = new Map(
+      (authData?.users ?? [])
+        .filter((u) => userIds.has(u.id))
+        .map((u) => [u.id, u.email ?? null]),
+    );
+    const nameMap = new Map((profileRows ?? []).map((p) => [p.id, p.display_name ?? null]));
+
+    const deletions: AdminChatDeletionRow[] = rows.map((r) => {
+      const otherId =
+        (r.payload as { other_user_id?: string } | null)?.other_user_id ?? null;
+      return {
+        id: r.id,
+        chat_id: r.target_id,
+        deleter_id: r.user_id!,
+        deleter_email: emailMap.get(r.user_id!) ?? null,
+        deleter_name: nameMap.get(r.user_id!) ?? null,
+        other_user_id: otherId,
+        other_user_email: otherId ? (emailMap.get(otherId) ?? null) : null,
+        other_user_name: otherId ? (nameMap.get(otherId) ?? null) : null,
+        created_at: r.created_at,
+      };
+    });
+
+    return { deletions, total };
   });
 
 // ─────────────────────────────────────────────────────────────────────────────

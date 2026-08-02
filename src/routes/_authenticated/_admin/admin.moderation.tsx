@@ -9,7 +9,13 @@ import { AdminBadge } from "@/components/admin/AdminBadge";
 import { AdminConfirmAction } from "@/components/admin/AdminConfirmAction";
 import { useAdminQuery } from "@/hooks/use-admin-query";
 import { useAdminRole } from "@/hooks/use-admin-role";
-import { getAdminReports, updateReportStatus, banUserFromReport, getAdminBlocksOnly } from "@/server-fns/admin";
+import {
+  getAdminReports,
+  updateReportStatus,
+  banUserFromReport,
+  getAdminBlocksOnly,
+  getAdminChatDeletions,
+} from "@/server-fns/admin";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Table,
@@ -21,13 +27,17 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { AdminReportRow, AdminBlockRow } from "@/integrations/supabase/admin-types";
+import type {
+  AdminReportRow,
+  AdminBlockRow,
+  AdminChatDeletionRow,
+} from "@/integrations/supabase/admin-types";
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/moderation")({
   component: AdminModerationPage,
 });
 
-type Status = "pending" | "reviewed" | "dismissed" | "blocks";
+type Status = "pending" | "reviewed" | "dismissed" | "blocks" | "deletions";
 
 function AdminModerationPage() {
   const { session } = useAuth();
@@ -41,6 +51,8 @@ function AdminModerationPage() {
   const [banTarget, setBanTarget] = useState<AdminReportRow | null>(null);
 
   const isBlocksTab = status === "blocks";
+  const isDeletionsTab = status === "deletions";
+  const isReportsTab = !isBlocksTab && !isDeletionsTab;
 
   const { data, isLoading } = useAdminQuery(
     ["admin-reports", status, page],
@@ -48,7 +60,7 @@ function AdminModerationPage() {
       getAdminReports({
         data: { token, page, perPage: 20, status: status as "pending" | "reviewed" | "dismissed" },
       }),
-    { keepPreviousData: true, enabled: !isBlocksTab } as never,
+    { keepPreviousData: true, enabled: isReportsTab } as never,
   );
 
   const { data: blocksData, isLoading: blocksLoading } = useAdminQuery(
@@ -57,12 +69,23 @@ function AdminModerationPage() {
     { keepPreviousData: true, enabled: isBlocksTab } as never,
   );
 
-  const totalPages = isBlocksTab
-    ? Math.max(1, Math.ceil((blocksData?.total ?? 0) / 20))
-    : Math.max(1, Math.ceil((data?.total ?? 0) / 20));
+  const { data: deletionsData, isLoading: deletionsLoading } = useAdminQuery(
+    ["admin-chat-deletions", page],
+    (token) => getAdminChatDeletions({ data: { token, page, perPage: 20 } }),
+    { keepPreviousData: true, enabled: isDeletionsTab } as never,
+  );
 
-  const activeTotal = isBlocksTab ? (blocksData?.total ?? 0) : (data?.total ?? 0);
-  const activeLoading = isBlocksTab ? blocksLoading : isLoading;
+  const activeTotal = isBlocksTab
+    ? (blocksData?.total ?? 0)
+    : isDeletionsTab
+      ? (deletionsData?.total ?? 0)
+      : (data?.total ?? 0);
+  const activeLoading = isBlocksTab
+    ? blocksLoading
+    : isDeletionsTab
+      ? deletionsLoading
+      : isLoading;
+  const totalPages = Math.max(1, Math.ceil(activeTotal / 20));
 
   function invalidate() {
     qc.invalidateQueries({ queryKey: ["admin-reports"] });
@@ -94,7 +117,13 @@ function AdminModerationPage() {
         right={
           <RecordCount
             count={activeTotal}
-            label={isBlocksTab ? "block-only records" : `${status} reports`}
+            label={
+              isBlocksTab
+                ? "block-only records"
+                : isDeletionsTab
+                  ? "chat deletions"
+                  : `${status} reports`
+            }
           />
         }
       />
@@ -107,11 +136,12 @@ function AdminModerationPage() {
             <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
             <TabsTrigger value="dismissed">Dismissed</TabsTrigger>
             <TabsTrigger value="blocks">Blocks</TabsTrigger>
+            <TabsTrigger value="deletions">Deletions</TabsTrigger>
           </TabsList>
         </Tabs>
 
         {/* Reports table */}
-        {!isBlocksTab && (
+        {isReportsTab && (
           <div className="rounded-xl border border-border">
             <Table>
               <TableHeader>
@@ -289,6 +319,85 @@ function AdminModerationPage() {
                         </TableCell>
                       </TableRow>
                     ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {/* User chat deletions audit table */}
+        {isDeletionsTab && (
+          <div className="rounded-xl border border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Deleted by</TableHead>
+                  <TableHead>Other party</TableHead>
+                  <TableHead>Chat ID</TableHead>
+                  <TableHead>Deleted at</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeLoading
+                  ? Array.from({ length: 6 }).map((_, i) => (
+                      <TableRow key={i}>
+                        {Array.from({ length: 4 }).map((__, j) => (
+                          <TableCell key={j}>
+                            <div className="h-4 animate-pulse rounded-full bg-surface" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  : (deletionsData?.deletions ?? []).map((d: AdminChatDeletionRow) => (
+                      <TableRow key={d.id}>
+                        <TableCell className="text-sm">
+                          <Link
+                            to="/admin/users/$id"
+                            params={{ id: d.deleter_id }}
+                            className="font-medium underline-offset-2 hover:underline"
+                          >
+                            {d.deleter_name ?? d.deleter_email ?? d.deleter_id.slice(0, 8)}
+                          </Link>
+                          {d.deleter_email && d.deleter_name && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              ({d.deleter_email})
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {d.other_user_id ? (
+                            <>
+                              <Link
+                                to="/admin/users/$id"
+                                params={{ id: d.other_user_id }}
+                                className="font-medium underline-offset-2 hover:underline"
+                              >
+                                {d.other_user_name ?? d.other_user_email ?? d.other_user_id.slice(0, 8)}
+                              </Link>
+                              {d.other_user_email && d.other_user_name && (
+                                <span className="ml-2 text-xs text-muted-foreground">
+                                  ({d.other_user_email})
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">
+                          {d.chat_id}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(d.created_at).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                {!activeLoading && (deletionsData?.deletions ?? []).length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-10 text-center text-sm text-muted-foreground">
+                      No user chat deletions recorded yet.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>

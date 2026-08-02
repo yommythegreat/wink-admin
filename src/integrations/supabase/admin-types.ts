@@ -108,6 +108,20 @@ export type AdminBlockRow = {
   created_at: string;
 };
 
+// Chat deletion audit row: user hard-deleted an expired chat.
+// Sourced from admin_audit_log rows where action='user.delete_chat'.
+export type AdminChatDeletionRow = {
+  id: string;
+  chat_id: string;
+  deleter_id: string;
+  deleter_email: string | null;
+  deleter_name: string | null;
+  other_user_id: string | null;
+  other_user_email: string | null;
+  other_user_name: string | null;
+  created_at: string;
+};
+
 // Admin team member row returned by getAdminAdmins
 export type AdminAdminRow = {
   user_id: string;
