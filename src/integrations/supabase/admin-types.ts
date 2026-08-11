@@ -122,6 +122,16 @@ export type AdminChatDeletionRow = {
   created_at: string;
 };
 
+// Waitlist signup row from public.waitlist_signups (marketing site).
+// Public inserts allowed; reads are service-role only, so admin is the
+// only surface that sees these.
+export type AdminWaitlistRow = {
+  id: string;
+  email: string;
+  source: string | null;
+  created_at: string;
+};
+
 // Admin team member row returned by getAdminAdmins
 export type AdminAdminRow = {
   user_id: string;

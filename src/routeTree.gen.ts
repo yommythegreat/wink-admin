@@ -15,6 +15,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedAdminAdminRouteImport } from './routes/_authenticated/_admin/admin'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
+import { Route as AuthenticatedAdminAdminWaitlistRouteImport } from './routes/_authenticated/_admin/admin.waitlist'
 import { Route as AuthenticatedAdminAdminUsersRouteImport } from './routes/_authenticated/_admin/admin.users'
 import { Route as AuthenticatedAdminAdminSubscriptionsRouteImport } from './routes/_authenticated/_admin/admin.subscriptions'
 import { Route as AuthenticatedAdminAdminSpotsRouteImport } from './routes/_authenticated/_admin/admin.spots'
@@ -61,6 +62,12 @@ const AuthenticatedAdminAdminIndexRoute =
   AuthenticatedAdminAdminIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedAdminAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminWaitlistRoute =
+  AuthenticatedAdminAdminWaitlistRouteImport.update({
+    id: '/waitlist',
+    path: '/waitlist',
     getParentRoute: () => AuthenticatedAdminAdminRoute,
   } as any)
 const AuthenticatedAdminAdminUsersRoute =
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
   '/admin/subscriptions': typeof AuthenticatedAdminAdminSubscriptionsRoute
   '/admin/users': typeof AuthenticatedAdminAdminUsersRouteWithChildren
+  '/admin/waitlist': typeof AuthenticatedAdminAdminWaitlistRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/categories/$categoryId': typeof AuthenticatedAdminAdminCategoriesCategoryIdRoute
   '/admin/cities/$cityId': typeof AuthenticatedAdminAdminCitiesCityIdRoute
@@ -208,6 +216,7 @@ export interface FileRoutesByTo {
   '/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
   '/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
   '/admin/subscriptions': typeof AuthenticatedAdminAdminSubscriptionsRoute
+  '/admin/waitlist': typeof AuthenticatedAdminAdminWaitlistRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
   '/admin/categories/$categoryId': typeof AuthenticatedAdminAdminCategoriesCategoryIdRoute
   '/admin/cities/$cityId': typeof AuthenticatedAdminAdminCitiesCityIdRoute
@@ -235,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
   '/_authenticated/_admin/admin/subscriptions': typeof AuthenticatedAdminAdminSubscriptionsRoute
   '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRouteWithChildren
+  '/_authenticated/_admin/admin/waitlist': typeof AuthenticatedAdminAdminWaitlistRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
   '/_authenticated/_admin/admin/categories/$categoryId': typeof AuthenticatedAdminAdminCategoriesCategoryIdRoute
   '/_authenticated/_admin/admin/cities/$cityId': typeof AuthenticatedAdminAdminCitiesCityIdRoute
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin/spots'
     | '/admin/subscriptions'
     | '/admin/users'
+    | '/admin/waitlist'
     | '/admin/'
     | '/admin/categories/$categoryId'
     | '/admin/cities/$cityId'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/admin/spot-suggestions'
     | '/admin/spots'
     | '/admin/subscriptions'
+    | '/admin/waitlist'
     | '/admin'
     | '/admin/categories/$categoryId'
     | '/admin/cities/$cityId'
@@ -307,6 +319,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/spots'
     | '/_authenticated/_admin/admin/subscriptions'
     | '/_authenticated/_admin/admin/users'
+    | '/_authenticated/_admin/admin/waitlist'
     | '/_authenticated/_admin/admin/'
     | '/_authenticated/_admin/admin/categories/$categoryId'
     | '/_authenticated/_admin/admin/cities/$cityId'
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminRoute
+    }
+    '/_authenticated/_admin/admin/waitlist': {
+      id: '/_authenticated/_admin/admin/waitlist'
+      path: '/waitlist'
+      fullPath: '/admin/waitlist'
+      preLoaderRoute: typeof AuthenticatedAdminAdminWaitlistRouteImport
       parentRoute: typeof AuthenticatedAdminAdminRoute
     }
     '/_authenticated/_admin/admin/users': {
@@ -561,6 +581,7 @@ interface AuthenticatedAdminAdminRouteChildren {
   AuthenticatedAdminAdminSpotsRoute: typeof AuthenticatedAdminAdminSpotsRoute
   AuthenticatedAdminAdminSubscriptionsRoute: typeof AuthenticatedAdminAdminSubscriptionsRoute
   AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRouteWithChildren
+  AuthenticatedAdminAdminWaitlistRoute: typeof AuthenticatedAdminAdminWaitlistRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
 }
 
@@ -586,6 +607,7 @@ const AuthenticatedAdminAdminRouteChildren: AuthenticatedAdminAdminRouteChildren
       AuthenticatedAdminAdminSubscriptionsRoute,
     AuthenticatedAdminAdminUsersRoute:
       AuthenticatedAdminAdminUsersRouteWithChildren,
+    AuthenticatedAdminAdminWaitlistRoute: AuthenticatedAdminAdminWaitlistRoute,
     AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
   }
 

@@ -14,6 +14,7 @@ import {
   Lightbulb,
   BarChart3,
   Compass,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -38,6 +39,7 @@ export function AdminNav() {
     { to: "/admin/spot-suggestions", label: "Spot suggestions", icon: Lightbulb, exact: false },
     { to: "/admin/spot-analytics", label: "Spot analytics", icon: BarChart3, exact: false },
     { to: "/admin/launch-interest", label: "Launch interest", icon: Compass, exact: false },
+    { to: "/admin/waitlist", label: "Waitlist", icon: Mail, exact: false },
     { to: "/admin/config", label: "Configurations", icon: Settings2, exact: false },
     { to: "/admin/guide", label: "Product Guide", icon: BookOpen, exact: false },
     ...(role === "SUPER_ADMIN"

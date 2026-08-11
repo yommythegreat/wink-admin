@@ -11,6 +11,7 @@ import type {
   AdminRoleValue,
   AdminAdminRow,
   AdminDeletedUserRow,
+  AdminWaitlistRow,
 } from "@/integrations/supabase/admin-types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -792,6 +793,51 @@ export const getAdminChatDeletions = createServerFn({ method: "POST" })
 
     return { deletions, total };
   });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Waitlist signups (public marketing site — usewink.app + wink-waitlist)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Paginated waitlist read with optional case-insensitive email search.
+// Reads are service-role only by design (see migration
+// 20260602000001_waitlist_signups) so admin is the sole surface.
+export const getAdminWaitlistSignups = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      token: z.string(),
+      page: z.number().int().min(1).default(1),
+      perPage: z.number().int().min(1).max(100).default(25),
+      // Server-side email filter. Empty string = no filter. Uses ilike
+      // with a '%' wrap so admin can type any fragment.
+      search: z.string().trim().max(255).optional().default(""),
+    }),
+  )
+  .handler(
+    async ({
+      data,
+    }): Promise<{ rows: AdminWaitlistRow[]; total: number }> => {
+      await requireAdminUser(data.token);
+
+      const from = (data.page - 1) * data.perPage;
+      const to = from + data.perPage - 1;
+
+      let query = supabaseAdmin
+        .from("waitlist_signups")
+        .select("id, email, source, created_at", { count: "exact" })
+        .order("created_at", { ascending: false });
+
+      if (data.search) {
+        query = query.ilike("email", `%${data.search}%`);
+      }
+
+      const { data: rows, count, error } = await query.range(from, to);
+      if (error) throw error;
+      return {
+        rows: (rows ?? []) as AdminWaitlistRow[],
+        total: count ?? 0,
+      };
+    },
+  );
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin team management
