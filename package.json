@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "deploy:production": "npm run build && wrangler deploy --env production",
-    "deploy:staging": "npm run build && wrangler deploy --env staging",
+    "deploy:production": "./scripts/deploy-env.sh production",
+    "deploy:staging": "./scripts/deploy-env.sh staging",
     "deploy": "echo 'Use deploy:production or deploy:staging.' && exit 1"
   },
   "dependencies": {

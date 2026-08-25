@@ -1,7 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // PRODUCTION config. wrangler.staging.jsonc is the staging equivalent.
-  "name": "wink-admin",
+  "name": "wink-admin-staging",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
@@ -9,6 +8,6 @@
     "SENTRY_DSN": ""
   },
   "routes": [
-    { "pattern": "admin.usewink.app", "custom_domain": true }
+    { "pattern": "staging.admin.usewink.app", "custom_domain": true }
   ]
 }
