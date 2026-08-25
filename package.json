@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "deploy:production": "npm run build && wrangler deploy --env production",
+    "deploy:staging": "npm run build && wrangler deploy --env staging",
+    "deploy": "echo 'Use deploy:production or deploy:staging.' && exit 1"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

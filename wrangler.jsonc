@@ -1,10 +1,39 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // Top-level fields are shared defaults inherited by both envs.
+  // Environment-specific overrides live under `env.production` /
+  // `env.staging` below. Deploy with:
+  //   wrangler deploy --env production
+  //   wrangler deploy --env staging
+  // Supabase URL + keys are per-env encrypted secrets, pushed via
+  //   wrangler secret put VITE_SUPABASE_URL --env <name>
+  //   wrangler secret put VITE_SUPABASE_PUBLISHABLE_KEY --env <name>
+  //   wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env <name>
   "name": "wink-admin",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
   "vars": {
     "SENTRY_DSN": ""
+  },
+  "env": {
+    "production": {
+      "name": "wink-admin",
+      "vars": {
+        "SENTRY_DSN": ""
+      },
+      "routes": [
+        { "pattern": "admin.usewink.app", "custom_domain": true }
+      ]
+    },
+    "staging": {
+      "name": "wink-admin-staging",
+      "vars": {
+        "SENTRY_DSN": ""
+      },
+      "routes": [
+        { "pattern": "staging.admin.usewink.app", "custom_domain": true }
+      ]
+    }
   }
 }
