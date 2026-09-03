@@ -1073,6 +1073,9 @@ const APP_CONFIG_KEYS = [
   "free_session_minutes",
   "paid_session_options_minutes",
   "free_daily_session_cap",
+  // Per-surface lifetime match caps for free users (Wink Live / Wink Spot).
+  "free_live_match_cap",
+  "free_spot_match_cap",
   // Global Spot rules — JSON array of { order, title, body }. Shown to
   // users in a modal every time they tap Join Spot (no per-user accept
   // tracking; the modal is shown unconditionally).

@@ -58,6 +58,18 @@ const FIELDS: FieldSpec[] = [
     type: "number",
     help: "Maximum Go Live sessions a free user can start per calendar day.",
   },
+  {
+    key: "free_live_match_cap",
+    label: "Free Wink Live match cap",
+    type: "number",
+    help: "Lifetime Wink Live matches a free user can make before they must upgrade.",
+  },
+  {
+    key: "free_spot_match_cap",
+    label: "Free Wink Spot match cap",
+    type: "number",
+    help: "Lifetime Wink Spot matches a free user can make before they must upgrade.",
+  },
 ];
 
 /* ----------------------- Helpers ----------------------- */
