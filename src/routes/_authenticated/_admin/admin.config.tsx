@@ -58,6 +58,18 @@ const FIELDS: FieldSpec[] = [
     type: "number",
     help: "Lifetime Wink Spot matches a free user can make before they must upgrade.",
   },
+  {
+    key: "free_winkback_window_minutes",
+    label: "Free wink-back window (min)",
+    type: "number",
+    help: "Minutes a free user has to wink back on an incoming wink before it expires.",
+  },
+  {
+    key: "paid_winkback_window_minutes",
+    label: "Paid wink-back window (min)",
+    type: "number",
+    help: "Minutes a premium user has to wink back on an incoming wink (default 1440 = 24h).",
+  },
 ];
 
 /* ----------------------- Helpers ----------------------- */
