@@ -41,22 +41,10 @@ const FIELDS: FieldSpec[] = [
     help: "Comma-separated list of allowed radius values shown in Settings.",
   },
   {
-    key: "free_session_minutes",
-    label: "Free user session length (min)",
-    type: "number",
-    help: "How long a free user's Go Live session runs before auto-ending.",
-  },
-  {
-    key: "paid_session_options_minutes",
-    label: "Premium session length options (min)",
+    key: "session_options_minutes",
+    label: "Available session lengths (min)",
     type: "numbers",
-    help: "Comma-separated list shown to premium users in Settings.",
-  },
-  {
-    key: "free_daily_session_cap",
-    label: "Free user daily session cap",
-    type: "number",
-    help: "Maximum Go Live sessions a free user can start per calendar day.",
+    help: "Comma-separated list of session lengths any user can choose in Settings.",
   },
   {
     key: "free_live_match_cap",

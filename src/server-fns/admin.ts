@@ -1070,9 +1070,8 @@ export const getAdminAuditLog = createServerFn({ method: "POST" })
 const APP_CONFIG_KEYS = [
   "default_radius_m",
   "radius_options_m",
-  "free_session_minutes",
-  "paid_session_options_minutes",
-  "free_daily_session_cap",
+  // Session lengths any user can pick (session length is not a plan feature).
+  "session_options_minutes",
   // Per-surface lifetime match caps for free users (Wink Live / Wink Spot).
   "free_live_match_cap",
   "free_spot_match_cap",
