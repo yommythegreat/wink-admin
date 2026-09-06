@@ -50,6 +50,8 @@ export type AdminUserRow = {
   tiktok_url: string | null;
   // Live tracking
   total_live_count: number;
+  // Referral code (populated on the user-detail fetch; omitted from the list).
+  referral_code?: string | null;
 };
 
 // Report row enriched with reporter + reported profile snapshots

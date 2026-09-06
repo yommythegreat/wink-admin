@@ -360,6 +360,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
       x_url?: string | null;
       tiktok_url?: string | null;
       total_live_count?: number;
+      referral_code?: string | null;
     };
 
     return {
@@ -388,6 +389,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
       x_url: p.x_url ?? null,
       tiktok_url: p.tiktok_url ?? null,
       total_live_count: p.total_live_count ?? 0,
+      referral_code: p.referral_code ?? null,
       wink_sent: winkSent ?? 0,
       wink_received: winkReceived ?? 0,
       block_count: blockCount ?? 0,

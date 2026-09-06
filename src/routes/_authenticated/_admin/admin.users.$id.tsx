@@ -172,6 +172,7 @@ function AdminUserDetailPage() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <Row label="Joined" value={new Date(user.created_at).toLocaleDateString()} />
+              <Row label="Referral code" value={user.referral_code ?? "—"} />
               <Row label="Email verified" value={user.email_confirmed_at ? "Yes" : "No"} />
               <Row
                 label="Last seen"
