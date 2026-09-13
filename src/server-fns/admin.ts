@@ -138,12 +138,14 @@ export const getAdminDashboardStats = createServerFn({ method: "POST" })
       .eq("subscription_status", "active")
       .not("plan_tier", "is", null);
 
-    const tierCounts: Record<string, number> = { weekly: 0, monthly: 0, yearly: 0 };
+    const tierCounts: Record<string, number> = { starter: 0, premium: 0 };
     for (const s of subsData ?? []) {
       if (s.plan_tier && s.plan_tier in tierCounts) tierCounts[s.plan_tier]++;
     }
-    // MRR: weekly≈$8.67/mo (×4.33), monthly=$6, yearly=$50/12≈$4.17
-    const mrrPerTier: Record<string, number> = { weekly: 8.67, monthly: 6, yearly: 4.17 };
+    // Per-tier MRR is left at 0 until the real Stripe prices are wired in — the
+    // in-app display prices are free-text strings and can't be trusted for math.
+    // Subscriber counts below are accurate; the revenue figure is a placeholder.
+    const mrrPerTier: Record<string, number> = { starter: 0, premium: 0 };
     const revenueByTier = Object.entries(tierCounts).map(([tier, count]) => ({
       tier,
       count,
@@ -1074,9 +1076,19 @@ const APP_CONFIG_KEYS = [
   "radius_options_m",
   // Session lengths any user can pick (session length is not a plan feature).
   "session_options_minutes",
-  // Per-surface lifetime match caps for free users (Wink Live / Wink Spot).
-  "free_live_match_cap",
-  "free_spot_match_cap",
+  // Combined lifetime match cap for free users (Wink Live + Wink Spot).
+  "free_match_cap",
+  // Fixed Go Live session length for free users (paid pick from session_options).
+  "free_session_minutes",
+  // Monthly spot seats per tier (Premium is unlimited, so not configurable).
+  "free_spot_seats",
+  "starter_spot_seats",
+  // Admin display prices (strings, e.g. "$6/mo"). Shown in-app only — the real
+  // charge is the Stripe price and must be kept in sync manually.
+  "starter_monthly_price",
+  "starter_annual_price",
+  "premium_monthly_price",
+  "premium_annual_price",
   // Wink-back window (minutes): how long you have to wink back, per tier.
   "free_winkback_window_minutes",
   "paid_winkback_window_minutes",

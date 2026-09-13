@@ -25,7 +25,8 @@ export const Route = createFileRoute("/_authenticated/_admin/admin/config")({
 // of numbers (comma-separated in the UI).
 type FieldSpec =
   | { key: string; label: string; type: "number"; help: string }
-  | { key: string; label: string; type: "numbers"; help: string };
+  | { key: string; label: string; type: "numbers"; help: string }
+  | { key: string; label: string; type: "text"; help: string };
 
 const FIELDS: FieldSpec[] = [
   {
@@ -47,16 +48,52 @@ const FIELDS: FieldSpec[] = [
     help: "Comma-separated list of session lengths any user can choose in Settings.",
   },
   {
-    key: "free_live_match_cap",
-    label: "Free Wink Live match cap",
+    key: "free_match_cap",
+    label: "Free match cap (Live + Spot combined)",
     type: "number",
-    help: "Lifetime Wink Live matches a free user can make before they must upgrade.",
+    help: "Lifetime matches a free user can make across Wink Live and Wink Spot combined, before they must upgrade.",
   },
   {
-    key: "free_spot_match_cap",
-    label: "Free Wink Spot match cap",
+    key: "free_session_minutes",
+    label: "Free user session length (min)",
     type: "number",
-    help: "Lifetime Wink Spot matches a free user can make before they must upgrade.",
+    help: "Fixed Go Live session length for free users. Paid users choose from the session lengths above.",
+  },
+  {
+    key: "free_spot_seats",
+    label: "Free spot seats (per month)",
+    type: "number",
+    help: "How many spots a free user can be in at once. Leaving frees a seat only at the user's next monthly reset.",
+  },
+  {
+    key: "starter_spot_seats",
+    label: "Starter spot seats (per month)",
+    type: "number",
+    help: "How many spots a Starter user can be in at once, reset monthly. Premium is unlimited.",
+  },
+  {
+    key: "starter_monthly_price",
+    label: "Starter — monthly price (display)",
+    type: "text",
+    help: "Shown in-app only, e.g. \"$6/mo\". Does NOT change what Stripe charges — update the Stripe price to match.",
+  },
+  {
+    key: "starter_annual_price",
+    label: "Starter — annual price (display)",
+    type: "text",
+    help: "Shown in-app only, e.g. \"$60/yr\". Display only — keep in sync with the Stripe price.",
+  },
+  {
+    key: "premium_monthly_price",
+    label: "Premium — monthly price (display)",
+    type: "text",
+    help: "Shown in-app only. Display only — keep in sync with the Stripe price.",
+  },
+  {
+    key: "premium_annual_price",
+    label: "Premium — annual price (display)",
+    type: "text",
+    help: "Shown in-app only. Display only — keep in sync with the Stripe price.",
   },
   {
     key: "free_winkback_window_minutes",
@@ -92,6 +129,9 @@ function parseNumbersInput(raw: string): number[] | null {
 function formatValue(field: FieldSpec, value: unknown): string {
   if (field.type === "number") {
     return typeof value === "number" ? String(value) : "";
+  }
+  if (field.type === "text") {
+    return typeof value === "string" ? value : "";
   }
   // numbers
   if (Array.isArray(value)) return value.join(", ");
@@ -186,8 +226,10 @@ function AdminConfigPage() {
 
   async function handleSave(field: FieldSpec) {
     const raw = draft[field.key] ?? "";
-    const parsed =
-      field.type === "number" ? parseNumberInput(raw) : parseNumbersInput(raw);
+    let parsed: number | number[] | string | null;
+    if (field.type === "number") parsed = parseNumberInput(raw);
+    else if (field.type === "numbers") parsed = parseNumbersInput(raw);
+    else parsed = raw.trim(); // text: stored as a plain string
     if (parsed === null) {
       toast.error(
         field.type === "number"
@@ -333,7 +375,13 @@ function AdminConfigPage() {
                   onChange={(e) =>
                     setDraft((d) => ({ ...d, [field.key]: e.target.value }))
                   }
-                  placeholder={field.type === "numbers" ? "10, 20, 30" : "0"}
+                  placeholder={
+                    field.type === "numbers"
+                      ? "10, 20, 30"
+                      : field.type === "text"
+                        ? "$6/mo"
+                        : "0"
+                  }
                   disabled={isLoading}
                   className="max-w-xs"
                 />
