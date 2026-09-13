@@ -351,6 +351,7 @@ export type Database = {
           phone: string | null
           plan_tier: string
           referral_code: string
+          referred_by: string | null
           spot_match_count: number
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -360,6 +361,7 @@ export type Database = {
           tiktok_url: string | null
           total_live_count: number
           updated_at: string
+          wink_credit_balance: number
           x_url: string | null
         }
         Insert: {
@@ -388,6 +390,7 @@ export type Database = {
           phone?: string | null
           plan_tier?: string
           referral_code: string
+          referred_by?: string | null
           spot_match_count?: number
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -397,6 +400,7 @@ export type Database = {
           tiktok_url?: string | null
           total_live_count?: number
           updated_at?: string
+          wink_credit_balance?: number
           x_url?: string | null
         }
         Update: {
@@ -425,6 +429,7 @@ export type Database = {
           phone?: string | null
           plan_tier?: string
           referral_code?: string
+          referred_by?: string | null
           spot_match_count?: number
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -434,6 +439,7 @@ export type Database = {
           tiktok_url?: string | null
           total_live_count?: number
           updated_at?: string
+          wink_credit_balance?: number
           x_url?: string | null
         }
         Relationships: [
@@ -442,6 +448,52 @@ export type Database = {
             columns: ["current_city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_redemptions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          referred_id: string
+          referrer_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          referred_id: string
+          referrer_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          referred_id?: string
+          referrer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_redemptions_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_redemptions_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -822,6 +874,10 @@ export type Database = {
       }
     }
     Functions: {
+      award_referral_credit: {
+        Args: { p_referred: string; p_referrer: string }
+        Returns: number
+      }
       config_int: {
         Args: { p_default: number; p_key: string }
         Returns: number
@@ -854,6 +910,15 @@ export type Database = {
           other_name: string
           user1_id: string
           user2_id: string
+        }[]
+      }
+      get_my_referrals: {
+        Args: never
+        Returns: {
+          amount: number
+          created_at: string
+          referred_email: string
+          referred_name: string
         }[]
       }
       get_my_winks: {

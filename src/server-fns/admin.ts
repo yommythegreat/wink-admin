@@ -1092,6 +1092,8 @@ const APP_CONFIG_KEYS = [
   // Wink-back window (minutes): how long you have to wink back, per tier.
   "free_winkback_window_minutes",
   "paid_winkback_window_minutes",
+  // Wink credit (naira) a referrer earns per successful referral.
+  "referral_credit_amount",
   // Global Spot rules — JSON array of { order, title, body }. Shown to
   // users in a modal every time they tap Join Spot (no per-user accept
   // tracking; the modal is shown unconditionally).

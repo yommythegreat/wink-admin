@@ -107,6 +107,12 @@ const FIELDS: FieldSpec[] = [
     type: "number",
     help: "Minutes a premium user has to wink back on an incoming wink (default 1440 = 24h).",
   },
+  {
+    key: "referral_credit_amount",
+    label: "Referral credit (₦)",
+    type: "number",
+    help: "Wink credit (naira) a referrer earns when someone who used their code subscribes.",
+  },
 ];
 
 /* ----------------------- Helpers ----------------------- */
