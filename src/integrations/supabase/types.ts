@@ -335,6 +335,7 @@ export type Database = {
           display_name: string | null
           gender: string | null
           has_completed_tour: boolean
+          has_seen_spots_intro: boolean
           id: string
           instagram_url: string | null
           interests: string[]
@@ -374,6 +375,7 @@ export type Database = {
           display_name?: string | null
           gender?: string | null
           has_completed_tour?: boolean
+          has_seen_spots_intro?: boolean
           id: string
           instagram_url?: string | null
           interests?: string[]
@@ -413,6 +415,7 @@ export type Database = {
           display_name?: string | null
           gender?: string | null
           has_completed_tour?: boolean
+          has_seen_spots_intro?: boolean
           id?: string
           instagram_url?: string | null
           interests?: string[]
