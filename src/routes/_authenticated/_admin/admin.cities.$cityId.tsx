@@ -13,6 +13,7 @@ import {
   getSpotCategories,
   getCityCategoryIds,
   setCityCategories,
+  refetchCityBoundary,
 } from "@/server-fns/spots";
 import {
   Dialog,
@@ -61,6 +62,24 @@ function AdminCityDetailPage() {
   const enabledCategoryRows = (categories ?? []).filter((c) => enabledIds.has(c.id));
 
   const [manageOpen, setManageOpen] = useState(false);
+  const [refetching, setRefetching] = useState(false);
+
+  const onRefetchBoundary = async () => {
+    setRefetching(true);
+    try {
+      const res = await refetchCityBoundary({ data: { token, id: cityId } });
+      if (res.ok) {
+        toast.success("Boundary updated from OpenStreetMap");
+        await qc.invalidateQueries({ queryKey: ["admin-cities"] });
+      } else {
+        toast.error("No boundary found — this city will use its radius circle.");
+      }
+    } catch (e) {
+      toast.error(errMessage(e));
+    } finally {
+      setRefetching(false);
+    }
+  };
 
   if (!city) {
     return (
@@ -101,8 +120,20 @@ function AdminCityDetailPage() {
             <SummaryItem label="Latitude" value={city.center_lat != null ? city.center_lat.toFixed(4) : "—"} />
             <SummaryItem label="Longitude" value={city.center_lng != null ? city.center_lng.toFixed(4) : "—"} />
             <SummaryItem label="Radius" value={city.radius_m != null ? `${(city.radius_m / 1000).toFixed(1)} km` : "—"} />
-            <SummaryItem label="Created" value={new Date(city.created_at).toLocaleDateString()} />
+            <SummaryItem
+              label="Boundary"
+              value={city.bbox_min_lat != null ? "Detected (OSM)" : "Circle fallback"}
+            />
           </dl>
+          <div className="mt-4 flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={onRefetchBoundary} disabled={refetching}>
+              {refetching ? "Detecting…" : "Re-fetch boundary"}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Boundary is auto-detected from OpenStreetMap by city name; used to match users to
+              this city (falls back to the radius circle if none is found).
+            </p>
+          </div>
         </div>
 
         {/* Categories assigned to this city */}

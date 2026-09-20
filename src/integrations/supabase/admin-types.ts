@@ -160,6 +160,12 @@ export type AdminCityRow = {
   center_lat: number | null;
   center_lng: number | null;
   radius_m: number | null;
+  // Auto-detected boundary (OpenStreetMap). Used for point-in-box city matching;
+  // null falls back to the center+radius circle.
+  bbox_min_lat: number | null;
+  bbox_min_lng: number | null;
+  bbox_max_lat: number | null;
+  bbox_max_lng: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

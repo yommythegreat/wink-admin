@@ -115,6 +115,57 @@ export const getCities = createServerFn({ method: "POST" })
     })) as AdminCityRow[];
   });
 
+// Auto-detect a city's bounding box from OpenStreetMap Nominatim (free, no key).
+// Used to store cities.bbox_* so user-side detection is point-in-box (accurate)
+// instead of a circle. Best-effort: returns null on any failure and the city
+// falls back to its radius circle.
+async function fetchCityBoundingBox(
+  name: string,
+  country: string | null,
+): Promise<{
+  bbox_min_lat: number;
+  bbox_max_lat: number;
+  bbox_min_lng: number;
+  bbox_max_lng: number;
+} | null> {
+  const params = new URLSearchParams({ format: "json", limit: "1", q: name });
+  if (country) params.set("countrycodes", country.toLowerCase());
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+      // OSM policy requires a descriptive User-Agent identifying the app.
+      headers: { "User-Agent": "WinkAdmin/1.0 (city boundary lookup)" },
+    });
+    if (!res.ok) return null;
+    const arr = (await res.json()) as { boundingbox?: [string, string, string, string] }[];
+    const bb = arr?.[0]?.boundingbox;
+    if (!bb || bb.length !== 4) return null;
+    // Nominatim boundingbox = [minLat, maxLat, minLng, maxLng] (strings).
+    const minLat = parseFloat(bb[0]);
+    const maxLat = parseFloat(bb[1]);
+    const minLng = parseFloat(bb[2]);
+    const maxLng = parseFloat(bb[3]);
+    if ([minLat, maxLat, minLng, maxLng].some(Number.isNaN)) return null;
+    if (minLat >= maxLat || minLng >= maxLng) return null;
+    return { bbox_min_lat: minLat, bbox_max_lat: maxLat, bbox_min_lng: minLng, bbox_max_lng: maxLng };
+  } catch {
+    return null;
+  }
+}
+
+// Read a city's name/country, fetch its OSM bounding box, and store it. Best-effort.
+async function applyBoundaryFromOSM(cityId: string): Promise<boolean> {
+  const { data: city } = await supabaseAdmin
+    .from("cities")
+    .select("name, country")
+    .eq("id", cityId)
+    .single();
+  if (!city) return false;
+  const bbox = await fetchCityBoundingBox(city.name, city.country ?? null);
+  if (!bbox) return false;
+  const { error } = await supabaseAdmin.from("cities").update(bbox).eq("id", cityId);
+  return !error;
+}
+
 export const createCity = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
@@ -149,6 +200,8 @@ export const createCity = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+    // Auto-fill the boundary from OpenStreetMap (best-effort; falls back to circle).
+    await applyBoundaryFromOSM(row.id);
     await logAdminAction({
       adminId: admin.userId,
       action: "city.create",
@@ -178,6 +231,10 @@ export const updateCity = createServerFn({ method: "POST" })
     void _token;
     const { error } = await supabaseAdmin.from("cities").update(patch).eq("id", id);
     if (error) throw error;
+    // Re-detect the boundary when the name or country changed.
+    if (data.name !== undefined || data.country !== undefined) {
+      await applyBoundaryFromOSM(id);
+    }
     await logAdminAction({
       adminId: admin.userId,
       action: "city.update",
@@ -186,6 +243,22 @@ export const updateCity = createServerFn({ method: "POST" })
       payload: patch as Record<string, unknown>,
     });
     return { ok: true };
+  });
+
+// Manual "Re-fetch boundary" action for the admin city page.
+export const refetchCityBoundary = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ token: z.string(), id: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const admin = await requireAdminUser(data.token);
+    const ok = await applyBoundaryFromOSM(data.id);
+    await logAdminAction({
+      adminId: admin.userId,
+      action: "city.refetch_boundary",
+      targetType: "city",
+      targetId: data.id,
+      payload: { ok },
+    });
+    return { ok };
   });
 
 // Hard-deletes a city. Will fail with a useful FK message if any Spot still

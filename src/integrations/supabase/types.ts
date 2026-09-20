@@ -139,6 +139,10 @@ export type Database = {
       }
       cities: {
         Row: {
+          bbox_max_lat: number | null
+          bbox_max_lng: number | null
+          bbox_min_lat: number | null
+          bbox_min_lng: number | null
           center_lat: number | null
           center_lng: number | null
           country: string | null
@@ -151,6 +155,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bbox_max_lat?: number | null
+          bbox_max_lng?: number | null
+          bbox_min_lat?: number | null
+          bbox_min_lng?: number | null
           center_lat?: number | null
           center_lng?: number | null
           country?: string | null
@@ -163,6 +171,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bbox_max_lat?: number | null
+          bbox_max_lng?: number | null
+          bbox_min_lat?: number | null
+          bbox_min_lng?: number | null
           center_lat?: number | null
           center_lng?: number | null
           country?: string | null
