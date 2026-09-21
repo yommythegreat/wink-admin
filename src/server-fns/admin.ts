@@ -175,6 +175,9 @@ export const getAdminUsers = createServerFn({ method: "POST" })
       perPage: z.number().int().min(1).max(100).default(25),
       search: z.string().optional(),
       filter: z.enum(["all", "paid", "free", "live"]).default("all"),
+      // Exact campaign tag to filter by (e.g. an activation code). Server-side so
+      // the returned `total` is an accurate "how many from this campaign" count.
+      campaign: z.string().optional(),
     }),
   )
   .handler(async ({ data }): Promise<{ users: AdminUserRow[]; total: number }> => {
@@ -214,6 +217,11 @@ export const getAdminUsers = createServerFn({ method: "POST" })
       query = query.eq("is_live", true);
     }
 
+    // signup_campaign isn't in generated types yet — cast like is_paid above.
+    if (data.campaign) {
+      query = query.eq("signup_campaign" as never, data.campaign);
+    }
+
     const { data: profiles, count, error } = await query;
     if (error) throw error;
 
@@ -221,7 +229,7 @@ export const getAdminUsers = createServerFn({ method: "POST" })
     const ids = (profiles ?? []).map((p) => p.id);
     const { data: subProfiles } = await supabaseAdmin
       .from("profiles")
-      .select("id, is_paid, plan_tier, subscription_status, subscription_period_end")
+      .select("id, is_paid, plan_tier, subscription_status, subscription_period_end, signup_campaign")
       .in("id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
 
     const subMap = new Map(
@@ -291,6 +299,8 @@ export const getAdminUsers = createServerFn({ method: "POST" })
         onboarding_completed: p.onboarding_completed,
         report_count: reportMap[p.id] ?? 0,
         admin_role: (roleMap.get(p.id) as AdminRoleValue) ?? null,
+        signup_campaign:
+          (sub as { signup_campaign?: string | null } | undefined)?.signup_campaign ?? null,
       };
     });
 
@@ -299,7 +309,8 @@ export const getAdminUsers = createServerFn({ method: "POST" })
       rows = rows.filter(
         (u) =>
           u.display_name?.toLowerCase().includes(q) ||
-          u.email?.toLowerCase().includes(q),
+          u.email?.toLowerCase().includes(q) ||
+          u.signup_campaign?.toLowerCase().includes(q),
       );
     }
 
@@ -363,6 +374,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
       tiktok_url?: string | null;
       total_live_count?: number;
       referral_code?: string | null;
+      signup_campaign?: string | null;
     };
 
     return {
@@ -392,6 +404,7 @@ export const getAdminUserDetail = createServerFn({ method: "POST" })
       tiktok_url: p.tiktok_url ?? null,
       total_live_count: p.total_live_count ?? 0,
       referral_code: p.referral_code ?? null,
+      signup_campaign: p.signup_campaign ?? null,
       wink_sent: winkSent ?? 0,
       wink_received: winkReceived ?? 0,
       block_count: blockCount ?? 0,

@@ -52,6 +52,9 @@ export type AdminUserRow = {
   total_live_count: number;
   // Referral code (populated on the user-detail fetch; omitted from the list).
   referral_code?: string | null;
+  // Marketing campaign the account signed up from (e.g. an activation code),
+  // or null for organic signups. Separate from referral_code.
+  signup_campaign: string | null;
 };
 
 // Report row enriched with reporter + reported profile snapshots

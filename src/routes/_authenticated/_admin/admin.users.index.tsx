@@ -52,6 +52,9 @@ function AdminUsersPage() {
   // Active users state
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  // Campaign attribution: filtering by an exact campaign tag (e.g. an activation
+  // code) is server-side, so `data.total` is an accurate count of that campaign.
+  const [campaign, setCampaign] = useState("");
   const [page, setPage] = useState(1);
   const [banTarget, setBanTarget] = useState<AdminUserRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null);
@@ -60,9 +63,18 @@ function AdminUsersPage() {
   const [deletedPage, setDeletedPage] = useState(1);
 
   const { data, isLoading } = useAdminQuery(
-    ["admin-users", page, search, filter],
+    ["admin-users", page, search, filter, campaign],
     (token) =>
-      getAdminUsers({ data: { token, page, perPage: 25, search: search || undefined, filter } }),
+      getAdminUsers({
+        data: {
+          token,
+          page,
+          perPage: 25,
+          search: search || undefined,
+          filter,
+          campaign: campaign.trim() || undefined,
+        },
+      }),
     { keepPreviousData: true } as never,
   );
 
@@ -119,6 +131,15 @@ function AdminUsersPage() {
                   <SelectItem value="live">Live now</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Exact-match campaign filter. Typing a code (e.g. AFSSA) narrows
+                  the list to that activation; the header count then shows how many
+                  signed up from it. */}
+              <Input
+                placeholder="Campaign code (e.g. AFSSA)"
+                value={campaign}
+                onChange={(e) => { setCampaign(e.target.value); setPage(1); }}
+                className="w-52"
+              />
             </div>
 
             {/* Table */}
@@ -133,6 +154,7 @@ function AdminUsersPage() {
                     <TableHead>Plan</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Joined</TableHead>
+                    <TableHead>Campaign</TableHead>
                     <TableHead>Reports</TableHead>
                     <TableHead className="w-10" />
                   </TableRow>
@@ -141,7 +163,7 @@ function AdminUsersPage() {
                   {isLoading
                     ? Array.from({ length: 8 }).map((_, i) => (
                         <TableRow key={i}>
-                          {Array.from({ length: 9 }).map((__, j) => (
+                          {Array.from({ length: 10 }).map((__, j) => (
                             <TableCell key={j}>
                               <div className="h-4 animate-pulse rounded-full bg-surface" />
                             </TableCell>
@@ -181,6 +203,15 @@ function AdminUsersPage() {
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {new Date(u.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {u.signup_campaign ? (
+                              <span className="inline-flex items-center rounded-full border border-border bg-secondary px-2 py-0.5 text-xs font-medium text-foreground">
+                                {u.signup_campaign}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">—</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             {u.report_count > 0 ? (

@@ -365,6 +365,7 @@ export type Database = {
           plan_tier: string
           referral_code: string
           referred_by: string | null
+          signup_campaign: string | null
           spot_match_count: number
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -403,8 +404,9 @@ export type Database = {
           onboarding_completed?: boolean
           phone?: string | null
           plan_tier?: string
-          referral_code: string
+          referral_code?: string
           referred_by?: string | null
+          signup_campaign?: string | null
           spot_match_count?: number
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -445,6 +447,7 @@ export type Database = {
           plan_tier?: string
           referral_code?: string
           referred_by?: string | null
+          signup_campaign?: string | null
           spot_match_count?: number
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
