@@ -19,6 +19,7 @@ import {
   deleteSpot,
   getCities,
   getSpotCategories,
+  createSpotCategory,
 } from "@/server-fns/spots";
 import {
   Table,
@@ -321,6 +322,46 @@ function SpotFormDialog({
   const [uploadingCover, setUploadingCover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
+  const qc = useQueryClient();
+
+  // Inline "add category" from the Category field, so admins don't have to leave
+  // the add-spot flow to create a missing category.
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [savingCategory, setSavingCategory] = useState(false);
+
+  async function createCategory() {
+    const name = newCategoryName.trim();
+    if (!name) {
+      toast.error("Enter a category name.");
+      return;
+    }
+    // Slug must match the server-fn's ^[a-z0-9-]+$ rule.
+    const slug = name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40);
+    if (!slug) {
+      toast.error("Enter a category name with letters or numbers.");
+      return;
+    }
+    setSavingCategory(true);
+    try {
+      const row = await createSpotCategory({ data: { token, name, slug } });
+      // Refetch the shared categories list so the new one flows into this form.
+      await qc.invalidateQueries({ queryKey: ["admin-spot-categories"] });
+      setDraft((d) => ({ ...d, category_id: row.id }));
+      setNewCategoryName("");
+      setShowNewCategory(false);
+      toast.success(`${name} added`);
+    } catch (err) {
+      toast.error("Couldn't add category: " + errMessage(err));
+    } finally {
+      setSavingCategory(false);
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -467,15 +508,56 @@ function SpotFormDialog({
             </Select>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Category</Label>
-            <Select value={draft.category_id} onValueChange={(v) => setDraft((d) => ({ ...d, category_id: v }))}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
-              <SelectContent>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Category</Label>
+              {!showNewCategory && (
+                <button
+                  type="button"
+                  onClick={() => setShowNewCategory(true)}
+                  className="text-xs font-medium text-wink hover:underline"
+                >
+                  + New
+                </button>
+              )}
+            </div>
+            {showNewCategory ? (
+              <div className="mt-1 flex items-center gap-2">
+                <Input
+                  autoFocus
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      createCategory();
+                    }
+                  }}
+                  placeholder="New category name"
+                  disabled={savingCategory}
+                />
+                <Button type="button" size="sm" onClick={createCategory} disabled={savingCategory}>
+                  {savingCategory ? "Adding…" : "Create"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => { setShowNewCategory(false); setNewCategoryName(""); }}
+                  disabled={savingCategory}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Select value={draft.category_id} onValueChange={(v) => setDraft((d) => ({ ...d, category_id: v }))}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <DialogField label="Name" value={draft.name} onChange={(v) => setDraft((d) => ({ ...d, name: v }))} placeholder="iFitness Lekki" />
           <DialogField label="Address" value={draft.address} onChange={(v) => setDraft((d) => ({ ...d, address: v }))} placeholder="12 Akin Adesola St" />
