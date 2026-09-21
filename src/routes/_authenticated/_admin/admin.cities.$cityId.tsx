@@ -90,6 +90,12 @@ function AdminCityDetailPage() {
     );
   }
 
+  const hasBoundary =
+    city.bbox_min_lat != null &&
+    city.bbox_max_lat != null &&
+    city.bbox_min_lng != null &&
+    city.bbox_max_lng != null;
+
   return (
     <div className="flex flex-col">
       <AdminHeader
@@ -116,23 +122,49 @@ function AdminCityDetailPage() {
             </div>
             <AdminBadge status={city.is_active ? "active" : "offline"} />
           </div>
-          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
-            <SummaryItem label="Latitude" value={city.center_lat != null ? city.center_lat.toFixed(4) : "—"} />
-            <SummaryItem label="Longitude" value={city.center_lng != null ? city.center_lng.toFixed(4) : "—"} />
-            <SummaryItem label="Radius" value={city.radius_m != null ? `${(city.radius_m / 1000).toFixed(1)} km` : "—"} />
-            <SummaryItem
-              label="Boundary"
-              value={city.bbox_min_lat != null ? "Detected (Google)" : "Circle fallback"}
-            />
-          </dl>
-          <div className="mt-4 flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={onRefetchBoundary} disabled={refetching}>
-              {refetching ? "Detecting…" : "Re-fetch boundary"}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Boundary is auto-detected from Google by city name; used to match users to
-              this city (falls back to the radius circle if none is found).
-            </p>
+          {/* Coverage — how users get matched to this city. The Google boundary
+              box is what's actually used; the legacy center+radius circle is only
+              a fallback when no box is set. Shown this way so the active model is
+              obvious (the lat/lng/radius fields on their own were confusing). */}
+          <div className="mt-4 rounded-lg border border-border bg-background/40 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Coverage — used to match users to this city
+              </p>
+              <Button variant="outline" size="sm" onClick={onRefetchBoundary} disabled={refetching}>
+                {refetching ? "Detecting…" : "Re-fetch boundary"}
+              </Button>
+            </div>
+            {hasBoundary ? (
+              <div className="mt-3 space-y-1 text-sm">
+                <p className="font-medium text-emerald-600 dark:text-emerald-400">
+                  ✓ Boundary detected from Google
+                </p>
+                <p className="text-muted-foreground">
+                  {city.bbox_min_lat!.toFixed(3)}, {city.bbox_min_lng!.toFixed(3)} (south-west) →{" "}
+                  {city.bbox_max_lat!.toFixed(3)}, {city.bbox_max_lng!.toFixed(3)} (north-east)
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Anyone inside this box is in {city.name}. Re-fetch if you rename the city.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-3 space-y-1 text-sm">
+                <p className="font-medium text-amber-600 dark:text-amber-400">
+                  No boundary — using center + radius (fallback)
+                </p>
+                <p className="text-muted-foreground">
+                  {city.center_lat != null && city.center_lng != null
+                    ? `Center ${city.center_lat.toFixed(3)}, ${city.center_lng.toFixed(3)} · radius ${
+                        city.radius_m != null ? (city.radius_m / 1000).toFixed(1) : "—"
+                      } km`
+                    : "No coordinates set."}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Click "Re-fetch boundary" to auto-detect an accurate boundary from Google.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -221,15 +253,6 @@ function AdminCityDetailPage() {
           qc.invalidateQueries({ queryKey: ["admin-city-categories", cityId] });
         }}
       />
-    </div>
-  );
-}
-
-function SummaryItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-1 font-medium tabular-nums">{value}</dd>
     </div>
   );
 }
