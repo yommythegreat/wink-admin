@@ -115,10 +115,10 @@ export const getCities = createServerFn({ method: "POST" })
     })) as AdminCityRow[];
   });
 
-// Auto-detect a city's bounding box from OpenStreetMap Nominatim (free, no key).
-// Used to store cities.bbox_* so user-side detection is point-in-box (accurate)
-// instead of a circle. Best-effort: returns null on any failure and the city
-// falls back to its radius circle.
+// Auto-detect a city's bounding box from the Google Geocoding API. Used to store
+// cities.bbox_* so user-side detection is point-in-box (accurate) instead of a
+// circle. Best-effort: returns null on any failure (or when the key is unset) and
+// the city falls back to its radius circle. Needs GOOGLE_GEOCODING_API_KEY.
 async function fetchCityBoundingBox(
   name: string,
   country: string | null,
@@ -128,23 +128,32 @@ async function fetchCityBoundingBox(
   bbox_min_lng: number;
   bbox_max_lng: number;
 } | null> {
-  const params = new URLSearchParams({ format: "json", limit: "1", q: name });
-  if (country) params.set("countrycodes", country.toLowerCase());
+  const key = process.env.GOOGLE_GEOCODING_API_KEY;
+  if (!key) return null;
+  const params = new URLSearchParams({ address: name, key });
+  if (country) params.set("components", `country:${country}`);
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-      // OSM policy requires a descriptive User-Agent identifying the app.
-      headers: { "User-Agent": "WinkAdmin/1.0 (city boundary lookup)" },
-    });
+    const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?${params}`);
     if (!res.ok) return null;
-    const arr = (await res.json()) as { boundingbox?: [string, string, string, string] }[];
-    const bb = arr?.[0]?.boundingbox;
-    if (!bb || bb.length !== 4) return null;
-    // Nominatim boundingbox = [minLat, maxLat, minLng, maxLng] (strings).
-    const minLat = parseFloat(bb[0]);
-    const maxLat = parseFloat(bb[1]);
-    const minLng = parseFloat(bb[2]);
-    const maxLng = parseFloat(bb[3]);
-    if ([minLat, maxLat, minLng, maxLng].some(Number.isNaN)) return null;
+    const data = (await res.json()) as {
+      status?: string;
+      results?: {
+        geometry?: {
+          bounds?: { northeast: { lat: number; lng: number }; southwest: { lat: number; lng: number } };
+          viewport?: { northeast: { lat: number; lng: number }; southwest: { lat: number; lng: number } };
+        };
+      }[];
+    };
+    if (data.status !== "OK") return null;
+    const g = data.results?.[0]?.geometry;
+    // Prefer the feature's true bounds; fall back to its viewport.
+    const b = g?.bounds ?? g?.viewport;
+    if (!b) return null;
+    const minLat = b.southwest.lat;
+    const maxLat = b.northeast.lat;
+    const minLng = b.southwest.lng;
+    const maxLng = b.northeast.lng;
+    if ([minLat, maxLat, minLng, maxLng].some((v) => typeof v !== "number" || Number.isNaN(v))) return null;
     if (minLat >= maxLat || minLng >= maxLng) return null;
     return { bbox_min_lat: minLat, bbox_max_lat: maxLat, bbox_min_lng: minLng, bbox_max_lng: maxLng };
   } catch {

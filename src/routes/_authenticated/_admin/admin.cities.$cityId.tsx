@@ -69,7 +69,7 @@ function AdminCityDetailPage() {
     try {
       const res = await refetchCityBoundary({ data: { token, id: cityId } });
       if (res.ok) {
-        toast.success("Boundary updated from OpenStreetMap");
+        toast.success("Boundary updated from Google");
         await qc.invalidateQueries({ queryKey: ["admin-cities"] });
       } else {
         toast.error("No boundary found — this city will use its radius circle.");
@@ -122,7 +122,7 @@ function AdminCityDetailPage() {
             <SummaryItem label="Radius" value={city.radius_m != null ? `${(city.radius_m / 1000).toFixed(1)} km` : "—"} />
             <SummaryItem
               label="Boundary"
-              value={city.bbox_min_lat != null ? "Detected (OSM)" : "Circle fallback"}
+              value={city.bbox_min_lat != null ? "Detected (Google)" : "Circle fallback"}
             />
           </dl>
           <div className="mt-4 flex items-center gap-3">
@@ -130,7 +130,7 @@ function AdminCityDetailPage() {
               {refetching ? "Detecting…" : "Re-fetch boundary"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Boundary is auto-detected from OpenStreetMap by city name; used to match users to
+              Boundary is auto-detected from Google by city name; used to match users to
               this city (falls back to the radius circle if none is found).
             </p>
           </div>
