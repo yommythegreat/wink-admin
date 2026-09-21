@@ -1107,6 +1107,9 @@ const APP_CONFIG_KEYS = [
   "paid_winkback_window_minutes",
   // Wink credit (naira) a referrer earns per successful referral.
   "referral_credit_amount",
+  // Master switch for the user-app payment surfaces (Plan/upgrade + referral
+  // credit UI). Off = "paid plans coming soon"; kept off until Paystack is live.
+  "payments_enabled",
   // Global Spot rules — JSON array of { order, title, body }. Shown to
   // users in a modal every time they tap Join Spot (no per-user accept
   // tracking; the modal is shown unconditionally).

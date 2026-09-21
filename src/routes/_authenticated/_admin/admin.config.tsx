@@ -26,9 +26,16 @@ export const Route = createFileRoute("/_authenticated/_admin/admin/config")({
 type FieldSpec =
   | { key: string; label: string; type: "number"; help: string }
   | { key: string; label: string; type: "numbers"; help: string }
-  | { key: string; label: string; type: "text"; help: string };
+  | { key: string; label: string; type: "text"; help: string }
+  | { key: string; label: string; type: "boolean"; help: string };
 
 const FIELDS: FieldSpec[] = [
+  {
+    key: "payments_enabled",
+    label: "Payments enabled",
+    type: "boolean",
+    help: "Master switch for the paid plans. OFF hides the upgrade + referral-credit UI and shows \"paid plans coming soon\". Keep OFF until Paystack is live.",
+  },
   {
     key: "default_radius_m",
     label: "Default radius (m)",
@@ -139,6 +146,10 @@ function formatValue(field: FieldSpec, value: unknown): string {
   if (field.type === "text") {
     return typeof value === "string" ? value : "";
   }
+  if (field.type === "boolean") {
+    // Draft holds "true"/"false"; default to on unless explicitly false.
+    return value === false ? "false" : "true";
+  }
   // numbers
   if (Array.isArray(value)) return value.join(", ");
   return "";
@@ -232,9 +243,10 @@ function AdminConfigPage() {
 
   async function handleSave(field: FieldSpec) {
     const raw = draft[field.key] ?? "";
-    let parsed: number | number[] | string | null;
+    let parsed: number | number[] | string | boolean | null;
     if (field.type === "number") parsed = parseNumberInput(raw);
     else if (field.type === "numbers") parsed = parseNumbersInput(raw);
+    else if (field.type === "boolean") parsed = raw === "true"; // stored as a real boolean
     else parsed = raw.trim(); // text: stored as a plain string
     if (parsed === null) {
       toast.error(
@@ -375,22 +387,42 @@ function AdminConfigPage() {
               </Label>
               <p className="mt-1 text-xs text-muted-foreground">{field.help}</p>
               <div className="mt-3 flex items-center gap-2">
-                <Input
-                  id={`cfg-${field.key}`}
-                  value={draft[field.key] ?? ""}
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, [field.key]: e.target.value }))
-                  }
-                  placeholder={
-                    field.type === "numbers"
-                      ? "10, 20, 30"
-                      : field.type === "text"
-                        ? "$6/mo"
-                        : "0"
-                  }
-                  disabled={isLoading}
-                  className="max-w-xs"
-                />
+                {field.type === "boolean" ? (
+                  <div className="inline-flex rounded-lg border border-border p-1">
+                    {(["true", "false"] as const).map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setDraft((d) => ({ ...d, [field.key]: v }))}
+                        disabled={isLoading}
+                        className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                          (draft[field.key] ?? "true") === v
+                            ? "bg-wink text-wink-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {v === "true" ? "On" : "Off"}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <Input
+                    id={`cfg-${field.key}`}
+                    value={draft[field.key] ?? ""}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, [field.key]: e.target.value }))
+                    }
+                    placeholder={
+                      field.type === "numbers"
+                        ? "10, 20, 30"
+                        : field.type === "text"
+                          ? "$6/mo"
+                          : "0"
+                    }
+                    disabled={isLoading}
+                    className="max-w-xs"
+                  />
+                )}
                 <Button
                   onClick={() => handleSave(field)}
                   disabled={isLoading || saving[field.key]}
