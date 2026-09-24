@@ -1107,9 +1107,14 @@ const APP_CONFIG_KEYS = [
   "paid_winkback_window_minutes",
   // Wink credit (naira) a referrer earns per successful referral.
   "referral_credit_amount",
-  // Master switch for the user-app payment surfaces (Plan/upgrade + referral
-  // credit UI). Off = "paid plans coming soon"; kept off until Paystack is live.
-  "payments_enabled",
+  // Payment surface mode: "off" (coming soon) | "manual" (bank transfer +
+  // receipt upload) | "paystack" (live checkout, future). Plus the bank details
+  // shown in the manual flow.
+  "payment_mode",
+  "bank_name",
+  "bank_account_number",
+  "bank_account_name",
+  "payment_instructions",
   // Global Spot rules — JSON array of { order, title, body }. Shown to
   // users in a modal every time they tap Join Spot (no per-user accept
   // tracking; the modal is shown unconditionally).
@@ -1157,3 +1162,153 @@ export const updateAppConfig = createServerFn({ method: "POST" })
   });
 
 export type AppConfigRow = { key: AppConfigKey; value: unknown; updated_at: string };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Manual bank-transfer payments (activation stopgap)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AdminPaymentSubmissionRow = {
+  id: string;
+  user_id: string;
+  email: string | null;
+  display_name: string | null;
+  tier: string;
+  interval: string;
+  amount: string | null;
+  receipt_url: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  reviewed_at: string | null;
+};
+
+export const getPaymentSubmissions = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      token: z.string(),
+      status: z.enum(["pending", "approved", "rejected", "all"]).default("pending"),
+    }),
+  )
+  .handler(async ({ data }): Promise<AdminPaymentSubmissionRow[]> => {
+    await requireAdminUser(data.token);
+    // payment_submissions isn't in the generated types — cast like other new tables.
+    const base = supabaseAdmin
+      .from("payment_submissions" as never)
+      .select("*")
+      .order("created_at", { ascending: false });
+    const { data: subs, error } =
+      data.status === "all" ? await base : await base.eq("status" as never, data.status as never);
+    if (error) throw error;
+    const rows = (subs ?? []) as unknown as {
+      id: string; user_id: string; tier: string; interval: string; amount: string | null;
+      receipt_path: string | null; status: AdminPaymentSubmissionRow["status"];
+      created_at: string; reviewed_at: string | null;
+    }[];
+
+    const ids = rows.map((r) => r.user_id);
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
+    const nameMap = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+    const emailMap = new Map<string, string>();
+    if (ids.length > 0) {
+      const { data: authData } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      for (const u of authData?.users ?? []) emailMap.set(u.id, u.email ?? "");
+    }
+
+    const out: AdminPaymentSubmissionRow[] = [];
+    for (const r of rows) {
+      let receipt_url: string | null = null;
+      if (r.receipt_path) {
+        const { data: signed } = await supabaseAdmin.storage
+          .from("payment-receipts")
+          .createSignedUrl(r.receipt_path, 3600);
+        receipt_url = signed?.signedUrl ?? null;
+      }
+      out.push({
+        id: r.id,
+        user_id: r.user_id,
+        email: emailMap.get(r.user_id) ?? null,
+        display_name: (nameMap.get(r.user_id) as string | null) ?? null,
+        tier: r.tier,
+        interval: r.interval,
+        amount: r.amount,
+        receipt_url,
+        status: r.status,
+        created_at: r.created_at,
+        reviewed_at: r.reviewed_at,
+      });
+    }
+    return out;
+  });
+
+export const approvePaymentSubmission = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ token: z.string(), id: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const admin = await requireAdminUser(data.token);
+    const { data: sub, error: subErr } = await supabaseAdmin
+      .from("payment_submissions" as never)
+      .select("*")
+      .eq("id" as never, data.id)
+      .maybeSingle();
+    if (subErr) throw subErr;
+    if (!sub) throw new Error("Submission not found");
+    const s = sub as unknown as { user_id: string; tier: string; status: string };
+    if (s.status !== "pending") throw new Error("This submission was already reviewed.");
+
+    // Flat 1-month grant (activation policy).
+    const periodEnd = new Date();
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+    const { error: profErr } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        plan_tier: s.tier,
+        is_paid: true,
+        subscription_status: "active",
+        subscription_period_end: periodEnd.toISOString(),
+      } as never)
+      .eq("id", s.user_id);
+    if (profErr) throw profErr;
+
+    const { error: updErr } = await supabaseAdmin
+      .from("payment_submissions" as never)
+      .update({
+        status: "approved",
+        reviewed_by: admin.userId,
+        reviewed_at: new Date().toISOString(),
+      } as never)
+      .eq("id" as never, data.id);
+    if (updErr) throw updErr;
+
+    await logAdminAction({
+      adminId: admin.userId,
+      action: "payment.approve",
+      targetType: "payment_submission",
+      targetId: data.id,
+      payload: { tier: s.tier, user_id: s.user_id },
+    });
+    return { ok: true };
+  });
+
+export const rejectPaymentSubmission = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ token: z.string(), id: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const admin = await requireAdminUser(data.token);
+    const { error } = await supabaseAdmin
+      .from("payment_submissions" as never)
+      .update({
+        status: "rejected",
+        reviewed_by: admin.userId,
+        reviewed_at: new Date().toISOString(),
+      } as never)
+      .eq("id" as never, data.id);
+    if (error) throw error;
+    await logAdminAction({
+      adminId: admin.userId,
+      action: "payment.reject",
+      targetType: "payment_submission",
+      targetId: data.id,
+    });
+    return { ok: true };
+  });

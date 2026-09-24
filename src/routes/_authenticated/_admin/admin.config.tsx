@@ -27,14 +27,44 @@ type FieldSpec =
   | { key: string; label: string; type: "number"; help: string }
   | { key: string; label: string; type: "numbers"; help: string }
   | { key: string; label: string; type: "text"; help: string }
-  | { key: string; label: string; type: "boolean"; help: string };
+  | { key: string; label: string; type: "boolean"; help: string }
+  | { key: string; label: string; type: "select"; help: string; options: { value: string; label: string }[] };
 
 const FIELDS: FieldSpec[] = [
   {
-    key: "payments_enabled",
-    label: "Payments enabled",
-    type: "boolean",
-    help: "Master switch for the paid plans. OFF hides the upgrade + referral-credit UI and shows \"paid plans coming soon\". Keep OFF until Paystack is live.",
+    key: "payment_mode",
+    label: "Payment mode",
+    type: "select",
+    help: "How users pay. Off = \"coming soon\". Manual = bank transfer + receipt upload (they submit; you approve in Pending Payments). Paystack = live checkout (not ready yet).",
+    options: [
+      { value: "off", label: "Off" },
+      { value: "manual", label: "Manual" },
+      { value: "paystack", label: "Paystack" },
+    ],
+  },
+  {
+    key: "bank_name",
+    label: "Bank name",
+    type: "text",
+    help: "Shown in the manual bank-transfer flow, e.g. \"GTBank\".",
+  },
+  {
+    key: "bank_account_number",
+    label: "Account number",
+    type: "text",
+    help: "The account users transfer to in the manual flow.",
+  },
+  {
+    key: "bank_account_name",
+    label: "Account name",
+    type: "text",
+    help: "The account holder name shown to users.",
+  },
+  {
+    key: "payment_instructions",
+    label: "Payment instructions",
+    type: "text",
+    help: "Optional note shown under the bank details, e.g. \"Use your email as the transfer reference.\"",
   },
   {
     key: "default_radius_m",
@@ -143,7 +173,7 @@ function formatValue(field: FieldSpec, value: unknown): string {
   if (field.type === "number") {
     return typeof value === "number" ? String(value) : "";
   }
-  if (field.type === "text") {
+  if (field.type === "text" || field.type === "select") {
     return typeof value === "string" ? value : "";
   }
   if (field.type === "boolean") {
@@ -402,6 +432,24 @@ function AdminConfigPage() {
                         }`}
                       >
                         {v === "true" ? "On" : "Off"}
+                      </button>
+                    ))}
+                  </div>
+                ) : field.type === "select" ? (
+                  <div className="inline-flex rounded-lg border border-border p-1">
+                    {field.options.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => setDraft((d) => ({ ...d, [field.key]: o.value }))}
+                        disabled={isLoading}
+                        className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                          (draft[field.key] ?? "") === o.value
+                            ? "bg-wink text-wink-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {o.label}
                       </button>
                     ))}
                   </div>

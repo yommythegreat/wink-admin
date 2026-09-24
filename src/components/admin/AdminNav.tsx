@@ -15,6 +15,7 @@ import {
   BarChart3,
   Compass,
   Mail,
+  Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,6 +32,7 @@ export function AdminNav() {
     { to: "/admin/users", label: "Users", icon: Users, exact: false },
     { to: "/admin/moderation", label: "Moderation", icon: ShieldAlert, exact: false },
     { to: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, exact: false },
+    { to: "/admin/payments", label: "Pending Payments", icon: Receipt, exact: false },
     // Wink Spots admin surfaces, grouped by data model order:
     // Cities → Categories → Spots → Suggestions queue → Analytics.
     { to: "/admin/cities", label: "Cities", icon: MapPin, exact: false },
