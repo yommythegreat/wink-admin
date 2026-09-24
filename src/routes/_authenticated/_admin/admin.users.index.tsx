@@ -192,7 +192,9 @@ function AdminUsersPage() {
                             {u.email ?? "—"}
                           </TableCell>
                           <TableCell>
-                            {u.plan_tier ? (
+                            {/* plan_tier defaults to 'free' (non-null), so key off
+                                is_paid — the source of truth for a paid plan. */}
+                            {u.is_paid ? (
                               <AdminBadge status="paid" />
                             ) : (
                               <AdminBadge status="free" />
