@@ -1176,6 +1176,7 @@ export type AdminPaymentSubmissionRow = {
   interval: string;
   amount: string | null;
   receipt_url: string | null;
+  referral_code: string | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
   reviewed_at: string | null;
@@ -1200,7 +1201,8 @@ export const getPaymentSubmissions = createServerFn({ method: "POST" })
     if (error) throw error;
     const rows = (subs ?? []) as unknown as {
       id: string; user_id: string; tier: string; interval: string; amount: string | null;
-      receipt_path: string | null; status: AdminPaymentSubmissionRow["status"];
+      receipt_path: string | null; referral_code: string | null;
+      status: AdminPaymentSubmissionRow["status"];
       created_at: string; reviewed_at: string | null;
     }[];
 
@@ -1235,6 +1237,7 @@ export const getPaymentSubmissions = createServerFn({ method: "POST" })
         interval: r.interval,
         amount: r.amount,
         receipt_url,
+        referral_code: r.referral_code,
         status: r.status,
         created_at: r.created_at,
         reviewed_at: r.reviewed_at,
@@ -1254,7 +1257,9 @@ export const approvePaymentSubmission = createServerFn({ method: "POST" })
       .maybeSingle();
     if (subErr) throw subErr;
     if (!sub) throw new Error("Submission not found");
-    const s = sub as unknown as { user_id: string; tier: string; status: string };
+    const s = sub as unknown as {
+      user_id: string; tier: string; status: string; referral_code: string | null;
+    };
     if (s.status !== "pending") throw new Error("This submission was already reviewed.");
 
     // Flat 1-month grant (activation policy).
@@ -1271,6 +1276,28 @@ export const approvePaymentSubmission = createServerFn({ method: "POST" })
       .eq("id", s.user_id);
     if (profErr) throw profErr;
 
+    // Reward the referrer whose code the payer entered. Reuses the idempotent
+    // award_referral_credit RPC (once per referred user; ignores self-referral /
+    // unknown codes). Best-effort — never fails the approval.
+    let referralAwarded = 0;
+    const code = s.referral_code?.trim().toUpperCase();
+    if (code) {
+      const { data: referrer } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("referral_code" as never, code)
+        .maybeSingle();
+      const referrerId = (referrer as { id?: string } | null)?.id;
+      if (referrerId && referrerId !== s.user_id) {
+        const { data: awarded, error: awardErr } = await supabaseAdmin.rpc(
+          "award_referral_credit" as never,
+          { p_referrer: referrerId, p_referred: s.user_id } as never,
+        );
+        if (awardErr) console.error("[payment.approve] referral credit failed", awardErr.message);
+        else referralAwarded = typeof awarded === "number" ? awarded : 0;
+      }
+    }
+
     const { error: updErr } = await supabaseAdmin
       .from("payment_submissions" as never)
       .update({
@@ -1286,9 +1313,9 @@ export const approvePaymentSubmission = createServerFn({ method: "POST" })
       action: "payment.approve",
       targetType: "payment_submission",
       targetId: data.id,
-      payload: { tier: s.tier, user_id: s.user_id },
+      payload: { tier: s.tier, user_id: s.user_id, referral_code: code ?? null, referralAwarded },
     });
-    return { ok: true };
+    return { ok: true, referralAwarded };
   });
 
 export const rejectPaymentSubmission = createServerFn({ method: "POST" })

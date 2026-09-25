@@ -39,8 +39,12 @@ function AdminPaymentsPage() {
   async function approve(id: string, name: string) {
     setBusy(id);
     try {
-      await approvePaymentSubmission({ data: { token, id } });
-      toast.success(`Approved — ${name}'s plan is active for 1 month`);
+      const res = await approvePaymentSubmission({ data: { token, id } });
+      const credited =
+        res && typeof res.referralAwarded === "number" && res.referralAwarded > 0
+          ? ` · ₦${res.referralAwarded} credited to referrer`
+          : "";
+      toast.success(`Approved — ${name}'s plan is active for 1 month${credited}`);
       invalidate();
     } catch (e) {
       toast.error(errMessage(e));
@@ -112,6 +116,11 @@ function AdminPaymentsPage() {
                       <span className="capitalize text-foreground">{r.tier}</span>
                       {r.amount ? ` · ${r.amount}` : ""} · {new Date(r.created_at).toLocaleString()}
                     </p>
+                    {r.referral_code && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Referral code: <span className="font-medium text-foreground">{r.referral_code}</span>
+                      </p>
+                    )}
                   </div>
                   <AdminBadge
                     status={
