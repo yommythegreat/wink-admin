@@ -1276,9 +1276,10 @@ export const approvePaymentSubmission = createServerFn({ method: "POST" })
       .eq("id", s.user_id);
     if (profErr) throw profErr;
 
-    // Reward the referrer whose code the payer entered. Reuses the idempotent
-    // award_referral_credit RPC (once per referred user; ignores self-referral /
-    // unknown codes). Best-effort — never fails the approval.
+    // Reward the referrer whose code the payer entered. Keyed by this submission
+    // id, so re-approving the same submission never double-awards, but each new
+    // approved payment earns the referrer again (ignores self / unknown codes).
+    // Best-effort — never fails the approval.
     let referralAwarded = 0;
     const code = s.referral_code?.trim().toUpperCase();
     if (code) {
@@ -1291,7 +1292,7 @@ export const approvePaymentSubmission = createServerFn({ method: "POST" })
       if (referrerId && referrerId !== s.user_id) {
         const { data: awarded, error: awardErr } = await supabaseAdmin.rpc(
           "award_referral_credit" as never,
-          { p_referrer: referrerId, p_referred: s.user_id } as never,
+          { p_referrer: referrerId, p_referred: s.user_id, p_reference: `submission:${data.id}` } as never,
         );
         if (awardErr) console.error("[payment.approve] referral credit failed", awardErr.message);
         else referralAwarded = typeof awarded === "number" ? awarded : 0;

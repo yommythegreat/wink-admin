@@ -21,6 +21,7 @@ import { Route as AuthenticatedAdminAdminSubscriptionsRouteImport } from './rout
 import { Route as AuthenticatedAdminAdminSpotsRouteImport } from './routes/_authenticated/_admin/admin.spots'
 import { Route as AuthenticatedAdminAdminSpotSuggestionsRouteImport } from './routes/_authenticated/_admin/admin.spot-suggestions'
 import { Route as AuthenticatedAdminAdminSpotAnalyticsRouteImport } from './routes/_authenticated/_admin/admin.spot-analytics'
+import { Route as AuthenticatedAdminAdminPaymentsRouteImport } from './routes/_authenticated/_admin/admin.payments'
 import { Route as AuthenticatedAdminAdminModerationRouteImport } from './routes/_authenticated/_admin/admin.moderation'
 import { Route as AuthenticatedAdminAdminLaunchInterestRouteImport } from './routes/_authenticated/_admin/admin.launch-interest'
 import { Route as AuthenticatedAdminAdminGuideRouteImport } from './routes/_authenticated/_admin/admin.guide'
@@ -98,6 +99,12 @@ const AuthenticatedAdminAdminSpotAnalyticsRoute =
   AuthenticatedAdminAdminSpotAnalyticsRouteImport.update({
     id: '/spot-analytics',
     path: '/spot-analytics',
+    getParentRoute: () => AuthenticatedAdminAdminRoute,
+  } as any)
+const AuthenticatedAdminAdminPaymentsRoute =
+  AuthenticatedAdminAdminPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
     getParentRoute: () => AuthenticatedAdminAdminRoute,
   } as any)
 const AuthenticatedAdminAdminModerationRoute =
@@ -190,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
   '/admin/launch-interest': typeof AuthenticatedAdminAdminLaunchInterestRoute
   '/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
+  '/admin/payments': typeof AuthenticatedAdminAdminPaymentsRoute
   '/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
   '/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
   '/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
   '/admin/launch-interest': typeof AuthenticatedAdminAdminLaunchInterestRoute
   '/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
+  '/admin/payments': typeof AuthenticatedAdminAdminPaymentsRoute
   '/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
   '/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
   '/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
@@ -239,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/guide': typeof AuthenticatedAdminAdminGuideRoute
   '/_authenticated/_admin/admin/launch-interest': typeof AuthenticatedAdminAdminLaunchInterestRoute
   '/_authenticated/_admin/admin/moderation': typeof AuthenticatedAdminAdminModerationRoute
+  '/_authenticated/_admin/admin/payments': typeof AuthenticatedAdminAdminPaymentsRoute
   '/_authenticated/_admin/admin/spot-analytics': typeof AuthenticatedAdminAdminSpotAnalyticsRoute
   '/_authenticated/_admin/admin/spot-suggestions': typeof AuthenticatedAdminAdminSpotSuggestionsRoute
   '/_authenticated/_admin/admin/spots': typeof AuthenticatedAdminAdminSpotsRoute
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/admin/guide'
     | '/admin/launch-interest'
     | '/admin/moderation'
+    | '/admin/payments'
     | '/admin/spot-analytics'
     | '/admin/spot-suggestions'
     | '/admin/spots'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/admin/guide'
     | '/admin/launch-interest'
     | '/admin/moderation'
+    | '/admin/payments'
     | '/admin/spot-analytics'
     | '/admin/spot-suggestions'
     | '/admin/spots'
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/guide'
     | '/_authenticated/_admin/admin/launch-interest'
     | '/_authenticated/_admin/admin/moderation'
+    | '/_authenticated/_admin/admin/payments'
     | '/_authenticated/_admin/admin/spot-analytics'
     | '/_authenticated/_admin/admin/spot-suggestions'
     | '/_authenticated/_admin/admin/spots'
@@ -419,6 +432,13 @@ declare module '@tanstack/react-router' {
       path: '/spot-analytics'
       fullPath: '/admin/spot-analytics'
       preLoaderRoute: typeof AuthenticatedAdminAdminSpotAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAdminAdminRoute
+    }
+    '/_authenticated/_admin/admin/payments': {
+      id: '/_authenticated/_admin/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AuthenticatedAdminAdminPaymentsRouteImport
       parentRoute: typeof AuthenticatedAdminAdminRoute
     }
     '/_authenticated/_admin/admin/moderation': {
@@ -576,6 +596,7 @@ interface AuthenticatedAdminAdminRouteChildren {
   AuthenticatedAdminAdminGuideRoute: typeof AuthenticatedAdminAdminGuideRoute
   AuthenticatedAdminAdminLaunchInterestRoute: typeof AuthenticatedAdminAdminLaunchInterestRoute
   AuthenticatedAdminAdminModerationRoute: typeof AuthenticatedAdminAdminModerationRoute
+  AuthenticatedAdminAdminPaymentsRoute: typeof AuthenticatedAdminAdminPaymentsRoute
   AuthenticatedAdminAdminSpotAnalyticsRoute: typeof AuthenticatedAdminAdminSpotAnalyticsRoute
   AuthenticatedAdminAdminSpotSuggestionsRoute: typeof AuthenticatedAdminAdminSpotSuggestionsRoute
   AuthenticatedAdminAdminSpotsRoute: typeof AuthenticatedAdminAdminSpotsRoute
@@ -598,6 +619,7 @@ const AuthenticatedAdminAdminRouteChildren: AuthenticatedAdminAdminRouteChildren
       AuthenticatedAdminAdminLaunchInterestRoute,
     AuthenticatedAdminAdminModerationRoute:
       AuthenticatedAdminAdminModerationRoute,
+    AuthenticatedAdminAdminPaymentsRoute: AuthenticatedAdminAdminPaymentsRoute,
     AuthenticatedAdminAdminSpotAnalyticsRoute:
       AuthenticatedAdminAdminSpotAnalyticsRoute,
     AuthenticatedAdminAdminSpotSuggestionsRoute:
