@@ -47,8 +47,10 @@ Wink Out tab — winks the user has sent that are still awaiting a response. Onc
 When a wink arrives in real time the receiver gets a toast notification: "👀 [Name] winked at you" and a native push if they have the iOS/Android app installed.
 
 Response windows:
-• Discover wink — 24 hours from when it was sent. Same for free and premium users. After 24h, the wink disappears from Wink In.
-• Spot wink — never expires. It stays in Wink In until the receiver declines, winks back, or it gets superseded by a fresh wink from the same sender.
+• Live (Discover) wink: free users can wink back for free_winkback_window_minutes, paid users for paid_winkback_window_minutes (both set in Config). After the paid window it disappears from Wink In.
+• Spot wink: never expires. It stays in Wink In until the receiver declines or winks back.
+
+Winking is idempotent: winking the same person again, or a double tap on Wink back, never sends a second wink or a second notification (send_wink RPC + one wink per sender and receiver).
 
 Free-tier paywall on Spot winks: when a free user is on the receiving end of a Spot wink, the sender's name is hidden as "Someone" and both Decline + Wink back are paywalled. They have to upgrade to act. Wink Out always shows the recipient's name regardless of tier.
 
@@ -81,15 +83,16 @@ Scenario where user B finds user A in Discover and winks (after A has already wi
   },
   {
     title: "How Chats work",
-    body: `Every chat has a 24-hour window. Once it expires the conversation is gone and cannot be recovered — this is by design.
+    body: `Chats don't expire. A match opens a chat that stays until one person unmatches (which removes it for both) or blocks.
 
 Inside a chat, users can:
-• Send plain text messages in real time
-• Tap "Share Contact" to send a contact card containing their phone number and any social links (Instagram, X, TikTok) they have saved in their profile. The other person can tap directly through to call or open social profiles.
+• Send text messages, with emoji, in real time
+• Send photos, videos (up to 60 seconds, 25 MB) and voice notes (up to 2 minutes). Media is stored privately; only the two people in the chat can open it.
+• React to any message with an emoji
+• Share a contact card with their phone number and saved social links
+• Report a single message, photo, video or voice note. The report lands in Moderation with the message attached.
 
-The countdown is shown in the chat header at all times. A reminder banner inside the thread reads "This conversation disappears in Xh. Share contact to keep it."
-
-Blocking: from the ⋯ menu in the chat header a user can block the other person. This immediately ends the conversation, marks the chat as blocked, and ensures neither party ever appears in the other's Discover feed again. When blocking, the user can optionally submit a report with a reason — this goes to the admin Moderation queue.`,
+Blocking: from the ⋯ menu a user can block the other person, optionally with a report. Both people then see a note in the chat ("You blocked X..." / "X has blocked you...") and neither can message. The chat stays visible, read-only, for 24 hours after the block, then disappears for both. The blocker can unblock in Settings › Blocked people.`,
   },
   {
     title: "How Profiles work",
@@ -190,11 +193,11 @@ Joining a Spot: tapping a Spot opens its detail page (cover image, description, 
 
 Available to Connect: a per-membership boolean (NOT a global per-user setting). A user can be A2C on at the gym they frequent and off at the library. Surfaces them at the top of the Spot's member list.
 
-Sending a Spot wink: the heart button next to each member fires the existing wink flow with context = 'spot' and spot_id pointing at the current Spot. Cycle-aware delete-then-insert (matches the Discover wink path). For at-cap free users the button becomes an upgrade Link.
+Sending a Spot wink: the Wink button on a member sends a wink with context = 'spot' and spot_id pointing at the current Spot (send_wink RPC, same as Live). For at-cap free users the button becomes an upgrade link.
 
-Receiving a Spot wink: lands in the user's Wink In tab with a "from {SpotName}" badge. Spot winks never expire (no 24h window). For free users the sender's name is hidden as "Someone" and the action buttons are paywalled — see "How Winks work."
+Receiving a Spot wink: lands in the user's Wink In tab with a "from {SpotName}" badge. Spot winks never expire. For free users the sender's name is hidden as "Someone" and the action buttons are paywalled — see "How Winks work."
 
-Matching from a Spot: identical to Discover matching. Mutual wink → handle_wink_match trigger creates a 24h chat, MatchSuccessModal appears, both push notifications fire. Same match counter increments.
+Matching from a Spot: identical to Discover matching. Mutual wink → handle_wink_match trigger creates the chat, the match modal appears, and both people get "You and X matched." Same match counter increments.
 
 Suggestions queue: tapping "Suggest a Spot" opens a form (name, category, city if known, address, notes). Submissions land in the Admin → Spot Suggestions queue. Admin can Approve, Reject, or Convert (creates the actual Spot row from the suggestion). All three transitions push the suggester via the push_spot_suggestion_status trigger.
 
@@ -223,10 +226,13 @@ Pipeline: every notification-worthy event in Postgres fires a database trigger. 
 
 Push categories firing today:
 • New wink received — title "You got a wink", body includes the sender's display name. Fires on every winks INSERT, sent to the receiver.
-• New match — title "It's a Wink Match!", fires on every chats INSERT (which only happens on mutual wink), sent to both parties.
-• New chat message — title is the sender's name, body is the first 140 chars of the message. Fires on every messages INSERT, sent to the OTHER party in the chat.
+• New match — title "It's a Wink Match!", body "You and X matched.", fires on every chats INSERT (which only happens on a mutual wink), sent to both parties.
+• New chat message — title is the sender's name, body is the first 140 chars of the message, or "📷 Photo", "🎥 Video", "🎤 Voice note". Sent to the OTHER party in the chat (not when they've blocked the sender).
+• Wink credit received — "You received Wink credit", sent to the person a transfer went to.
 • Spot suggestion status change — title varies (approved / converted / rejected), fires on spot_suggestions UPDATE when status moves out of "pending."
-• City just launched in your area — fires when admin clicks "Enable" on a city for the first time. The notify_city_launch RPC scans city_launch_interest for users whose stored coords fall within the new city's radius and pushes each of them.
+• City just launched in your area — fires when admin clicks "Enable" on a city. The city-launch-notify edge function emails everyone waiting for that city (people the app found outside every launched city, within the new city's area), then sends the push. Each person is told once.
+
+Delivery: pushes go out from the send-push edge function on Supabase (no longer through the web app), so they keep working if the web app is down.
 
 Token lifecycle: on every app launch, the user's FCM token is captured and upserted into device_tokens against their user_id. Tokens rotate occasionally — handled by FCM's own tokenReceived listener. Invalid tokens (uninstalls, app data cleared) are automatically pruned by the worker when FCM returns an "unregistered" error.`,
   },

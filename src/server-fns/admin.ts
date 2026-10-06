@@ -610,8 +610,42 @@ export const getAdminReports = createServerFn({ method: "POST" })
         .map((u) => [u.id, u.email ?? null]),
     );
 
+    // The reported message, if any. Media is private, so moderators get a
+    // signed link valid for an hour.
+    const messageIds = [
+      ...new Set(
+        (reports ?? [])
+          .map((r) => (r as { message_id?: string | null }).message_id)
+          .filter((id): id is string => !!id),
+      ),
+    ];
+    const messageMap = new Map<string, NonNullable<AdminReportRow["reported_message"]>>();
+    if (messageIds.length > 0) {
+      const { data: msgs } = await supabaseAdmin
+        .from("messages")
+        .select("id, kind, body, media_path, created_at" as never)
+        .in("id", messageIds);
+      for (const m of (msgs ?? []) as unknown as {
+        id: string;
+        kind: string;
+        body: string | null;
+        media_path: string | null;
+        created_at: string;
+      }[]) {
+        let mediaUrl: string | null = null;
+        if (m.media_path) {
+          const { data: signed } = await supabaseAdmin.storage
+            .from("chat-media")
+            .createSignedUrl(m.media_path, 60 * 60);
+          mediaUrl = signed?.signedUrl ?? null;
+        }
+        messageMap.set(m.id, { kind: m.kind, body: m.body, media_url: mediaUrl, created_at: m.created_at });
+      }
+    }
+
     const rows: AdminReportRow[] = (reports ?? []).map((r) => {
       const rp = profileMap.get(r.reporter_id);
+      const messageId = (r as { message_id?: string | null }).message_id;
       return {
         id: r.id,
         reporter_id: r.reporter_id,
@@ -627,6 +661,7 @@ export const getAdminReports = createServerFn({ method: "POST" })
         status: r.status as "pending" | "reviewed" | "dismissed",
         created_at: r.created_at,
         updated_at: r.updated_at,
+        reported_message: messageId ? (messageMap.get(messageId) ?? null) : null,
       };
     });
 
@@ -1087,8 +1122,10 @@ export const getAdminAuditLog = createServerFn({ method: "POST" })
 const APP_CONFIG_KEYS = [
   "default_radius_m",
   "radius_options_m",
-  // Session lengths any user can pick (session length is not a plan feature).
+  // Session lengths paid users pick from (free users get free_session_minutes).
   "session_options_minutes",
+  // Paid users' session length until they pick their own (web and mobile).
+  "default_session_minutes",
   // Combined lifetime match cap for free users (Wink Live + Wink Spot).
   "free_match_cap",
   // Fixed Go Live session length for free users (paid pick from session_options).
@@ -1107,6 +1144,9 @@ const APP_CONFIG_KEYS = [
   "paid_winkback_window_minutes",
   // Wink credit (naira) a referrer earns per successful referral.
   "referral_credit_amount",
+  // Sending Wink credit to another user (naira): smallest transfer, daily cap.
+  "credit_transfer_min",
+  "credit_transfer_daily_max",
   // Payment surface mode: "off" (coming soon) | "manual" (bank transfer +
   // receipt upload) | "paystack" (live checkout, future). Plus the bank details
   // shown in the manual flow.
@@ -1115,7 +1155,7 @@ const APP_CONFIG_KEYS = [
   "bank_account_number",
   "bank_account_name",
   "payment_instructions",
-  // Global Spot rules — JSON array of { order, title, body }. Shown to
+  // Global Spot rules: JSON array of { order, text }. Shown to
   // users in a modal every time they tap Join Spot (no per-user accept
   // tracking; the modal is shown unconditionally).
   "spot_rules",
@@ -1271,6 +1311,8 @@ export const approvePaymentSubmission = createServerFn({ method: "POST" })
         plan_tier: s.tier,
         is_paid: true,
         subscription_status: "active",
+        // Spot seats count per billing period from approval (C12).
+        subscription_current_period_start: new Date().toISOString(),
         subscription_period_end: periodEnd.toISOString(),
       } as never)
       .eq("id", s.user_id);

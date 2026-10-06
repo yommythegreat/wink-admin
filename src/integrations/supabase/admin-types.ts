@@ -73,6 +73,14 @@ export type AdminReportRow = {
   status: "pending" | "reviewed" | "dismissed";
   created_at: string;
   updated_at: string;
+  // The single message reported, when the report was made from a message
+  // (text, or a short-lived link to the photo, video or voice note).
+  reported_message: {
+    kind: string;
+    body: string | null;
+    media_url: string | null;
+    created_at: string;
+  } | null;
 };
 
 // Subscription row enriched with profile data

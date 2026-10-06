@@ -288,24 +288,29 @@ export const deleteCity = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// Calls the SQL helper from migration 9 that pushes "Wink Spots is live in
-// {city}" to every user whose stored lat/lng lands inside the city's radius.
+// "Wink is live in {city}": the city-launch-notify edge function emails
+// everyone waiting for this city (Resend), then sends the push and marks them
+// notified (notify_city_launch), so each person hears once. Called with the
+// admin's own session; the function checks they're an admin.
 export const publishCityLaunch = createServerFn({ method: "POST" })
   .inputValidator(z.object({ token: z.string(), city_id: z.string().uuid() }))
-  .handler(async ({ data }): Promise<{ notified: number }> => {
+  .handler(async ({ data }): Promise<{ notified: number; emailed: number; waiting: number }> => {
     const admin = await requireAdminUser(data.token);
-    const { data: count, error } = await supabaseAdmin.rpc("notify_city_launch", {
-      in_city_id: data.city_id,
+    const { data: res, error } = await supabaseAdmin.functions.invoke("city-launch-notify", {
+      body: { city_id: data.city_id },
+      headers: { Authorization: `Bearer ${data.token}` },
     });
     if (error) throw error;
+    const out = (res ?? {}) as { notified?: number; emailed?: number; waiting?: number };
+    const result = { notified: out.notified ?? 0, emailed: out.emailed ?? 0, waiting: out.waiting ?? 0 };
     await logAdminAction({
       adminId: admin.userId,
       action: "city.publish_launch",
       targetType: "city",
       targetId: data.city_id,
-      payload: { notified: count },
+      payload: result,
     });
-    return { notified: (count as number) ?? 0 };
+    return result;
   });
 
 // ─────────────────────────────────────────────────────────────────────────────

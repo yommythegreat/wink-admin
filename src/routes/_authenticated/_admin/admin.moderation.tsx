@@ -260,6 +260,22 @@ function AdminModerationPage() {
                           <TableRow key={`${r.id}-expanded`}>
                             <TableCell colSpan={8} className="bg-surface/50 pb-4 pt-0">
                               <p className="px-2 text-sm text-foreground">{r.reason}</p>
+                              {r.reported_message && (
+                                <div className="mx-2 mt-3 rounded-lg border border-border bg-background p-3">
+                                  <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                                    Reported {r.reported_message.kind === "text" ? "message" : r.reported_message.kind === "audio" ? "voice note" : r.reported_message.kind === "image" ? "photo" : r.reported_message.kind}
+                                  </p>
+                                  {r.reported_message.kind === "image" && r.reported_message.media_url ? (
+                                    <img src={r.reported_message.media_url} alt="" className="max-h-72 rounded-md" />
+                                  ) : r.reported_message.kind === "video" && r.reported_message.media_url ? (
+                                    <video src={r.reported_message.media_url} controls className="max-h-72 rounded-md" />
+                                  ) : r.reported_message.kind === "audio" && r.reported_message.media_url ? (
+                                    <audio src={r.reported_message.media_url} controls />
+                                  ) : (
+                                    <p className="whitespace-pre-wrap text-sm">{r.reported_message.body}</p>
+                                  )}
+                                </div>
+                              )}
                             </TableCell>
                           </TableRow>
                         )}

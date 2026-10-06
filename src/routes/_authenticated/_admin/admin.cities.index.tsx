@@ -70,9 +70,9 @@ function AdminCitiesPage() {
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-cities"] });
 
-  // Enable a city = mark it active AND fire the launch-push to anyone whose
-  // stored location is in range. notify_city_launch only pushes to users
-  // with notified_at=null, so toggling enable on/off doesn't re-spam them.
+  // Enable a city = mark it active AND tell everyone waiting for it, by email
+  // and push. Each person is only told once, so toggling enable on/off
+  // doesn't re-spam them.
   // Disable just flips is_active; no push.
   async function toggleEnabled(city: AdminCityRow) {
     try {
@@ -80,9 +80,11 @@ function AdminCitiesPage() {
       if (!city.is_active) {
         toast.success(`${city.name} enabled`);
         try {
-          const { notified } = await publishCityLaunch({ data: { token, city_id: city.id } });
-          if (notified > 0) {
-            toast.success(`Notified ${notified} user${notified === 1 ? "" : "s"} about ${city.name}`);
+          const { notified, emailed } = await publishCityLaunch({ data: { token, city_id: city.id } });
+          if (notified > 0 || emailed > 0) {
+            toast.success(
+              `Told ${Math.max(notified, emailed)} waiting user${Math.max(notified, emailed) === 1 ? "" : "s"} about ${city.name} (${emailed} by email, ${notified} by push)`,
+            );
           }
         } catch (pushErr) {
           toast.error("Enabled, but couldn't notify users: " + errMessage(pushErr));

@@ -76,13 +76,19 @@ const FIELDS: FieldSpec[] = [
     key: "radius_options_m",
     label: "Radius options (m)",
     type: "numbers",
-    help: "Comma-separated list of allowed radius values shown in Settings.",
+    help: "Comma-separated list of radius values users can pick in Settings, on the web and in the mobile app.",
   },
   {
     key: "session_options_minutes",
     label: "Available session lengths (min)",
     type: "numbers",
-    help: "Comma-separated list of session lengths any user can choose in Settings.",
+    help: "Comma-separated list of session lengths paid users can choose in Settings (web and mobile).",
+  },
+  {
+    key: "default_session_minutes",
+    label: "Default paid session length (min)",
+    type: "number",
+    help: "Session length for paid users who haven't picked one in Settings. Should be one of the lengths above.",
   },
   {
     key: "free_match_cap",
@@ -136,19 +142,31 @@ const FIELDS: FieldSpec[] = [
     key: "free_winkback_window_minutes",
     label: "Free wink-back window (min)",
     type: "number",
-    help: "Minutes a free user has to wink back on an incoming wink before it expires.",
+    help: "Minutes a free user has to wink back on an incoming Live wink. Spot winks don't expire.",
   },
   {
     key: "paid_winkback_window_minutes",
     label: "Paid wink-back window (min)",
     type: "number",
-    help: "Minutes a premium user has to wink back on an incoming wink (default 1440 = 24h).",
+    help: "Minutes a paid user has to wink back on an incoming Live wink (default 1440 = 24h). Spot winks don't expire.",
   },
   {
     key: "referral_credit_amount",
     label: "Referral credit (₦)",
     type: "number",
-    help: "Wink credit (naira) a referrer earns when someone who used their code subscribes.",
+    help: "Wink credit (naira) a referrer earns each time someone pays for a plan with their code.",
+  },
+  {
+    key: "credit_transfer_min",
+    label: "Smallest credit transfer (₦)",
+    type: "number",
+    help: "The least Wink credit a user can send to another user in one transfer.",
+  },
+  {
+    key: "credit_transfer_daily_max",
+    label: "Daily credit sending limit (₦)",
+    type: "number",
+    help: "The most Wink credit one user can send to others in a day.",
   },
 ];
 
