@@ -89,8 +89,9 @@ Inside a chat, users can:
 • Send text messages, with emoji, in real time
 • Send photos, videos (up to 60 seconds, 25 MB) and voice notes (up to 2 minutes). Media is stored privately; only the two people in the chat can open it.
 • React to any message with an emoji
-• Share a contact card with their phone number and saved social links
 • Report a single message, photo, video or voice note. The report lands in Moderation with the message attached.
+
+Read receipts follow WhatsApp: one grey tick means sent, two grey ticks delivered to the other person's app, two blue ticks read. Settings › Privacy › Read receipts: if either person turns it off, neither sees blue ticks; delivered ticks still show. Contact sharing was removed; contact cards shared before that still show in their chats.
 
 Blocking: from the ⋯ menu a user can block the other person, optionally with a report. Both people then see a note in the chat ("You blocked X..." / "X has blocked you...") and neither can message. The chat stays visible, read-only, for 24 hours after the block, then disappears for both. The blocker can unblock in Settings › Blocked people.`,
   },
@@ -107,20 +108,6 @@ Fields:
 • Interests — free-form tags
 
 Profiles are only visible to other users in Discover while the profile owner is live. Outside of a live session, a profile is visible to users who share an active wink or chat with the owner — and to other members of any Wink Spot the owner has joined.`,
-  },
-  {
-    title: "How Contact Info works",
-    body: `Contact Info (Profile › Contact) is where users store the details they are willing to share with a match.
-
-Fields available:
-• Phone number
-• Instagram URL
-• X (Twitter) URL
-• TikTok URL
-
-None of this information is shown publicly in Discover. It is only shared when a user taps "Share Contact" inside an active chat. The recipient sees a contact card bubble in the thread with tappable links.
-
-If a user has not filled in any contact fields and tries to share, they see a prompt directing them to Profile › Contact to add at least one detail first.`,
   },
   {
     title: "How Settings work",
@@ -150,7 +137,7 @@ At-cap free user (match_count ≥ 3):
 • Wink back on every incoming wink (Discover OR Spot) paywalled — funnels to Settings › Plan
 • Spot wink-send button paywalled — funnels to Settings › Plan
 • Decline still works (it doesn't create a match)
-• Existing chats still work — countdown, messages, contact share, block all unaffected
+• Existing chats still work: messages, media and block all unaffected
 • Browsing Spots, joining Spots, A2C toggle all still work — none of those create matches
 • A capped free user is also effectively invisible in Discover (they can't go live) and indirectly invisible in Spots (they can't initiate winks)
 
