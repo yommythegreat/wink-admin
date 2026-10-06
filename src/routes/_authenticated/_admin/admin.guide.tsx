@@ -195,7 +195,7 @@ Available to Connect: a per-membership boolean (NOT a global per-user setting). 
 
 Sending a Spot wink: the Wink button on a member sends a wink with context = 'spot' and spot_id pointing at the current Spot (send_wink RPC, same as Live). For at-cap free users the button becomes an upgrade link.
 
-Receiving a Spot wink: lands in the user's Wink In tab with a "from {SpotName}" badge. Spot winks never expire. For free users the sender's name is hidden as "Someone" and the action buttons are paywalled — see "How Winks work."
+Receiving a Spot wink: lands in the user's Wink In tab with a "from {SpotName}" badge. Spot winks never expire. For free users the sender's name is hidden as "Someone" and the action buttons are paywalled. See "How Winks work."
 
 Matching from a Spot: identical to Discover matching. Mutual wink → handle_wink_match trigger creates the chat, the match modal appears, and both people get "You and X matched." Same match counter increments.
 
@@ -226,11 +226,11 @@ Pipeline: every notification-worthy event in Postgres fires a database trigger. 
 
 Push categories firing today:
 • New wink received — title "You got a wink", body includes the sender's display name. Fires on every winks INSERT, sent to the receiver.
-• New match — title "It's a Wink Match!", body "You and X matched.", fires on every chats INSERT (which only happens on a mutual wink), sent to both parties.
-• New chat message — title is the sender's name, body is the first 140 chars of the message, or "📷 Photo", "🎥 Video", "🎤 Voice note". Sent to the OTHER party in the chat (not when they've blocked the sender).
-• Wink credit received — "You received Wink credit", sent to the person a transfer went to.
+• New match: title "It's a Wink Match!", body "You and X matched.", fires on every chats INSERT (which only happens on a mutual wink), sent to both parties.
+• New chat message: title is the sender's name, body is the first 140 chars of the message, or "📷 Photo", "🎥 Video", "🎤 Voice note". Sent to the OTHER party in the chat (not when they've blocked the sender).
+• Wink credit received: "You received Wink credit", sent to the person a transfer went to.
 • Spot suggestion status change — title varies (approved / converted / rejected), fires on spot_suggestions UPDATE when status moves out of "pending."
-• City just launched in your area — fires when admin clicks "Enable" on a city. The city-launch-notify edge function emails everyone waiting for that city (people the app found outside every launched city, within the new city's area), then sends the push. Each person is told once.
+• City just launched in your area: fires when admin clicks "Enable" on a city. The city-launch-notify edge function emails everyone waiting for that city (people the app found outside every launched city, within the new city's area), then sends the push. Each person is told once.
 
 Delivery: pushes go out from the send-push edge function on Supabase (no longer through the web app), so they keep working if the web app is down.
 
