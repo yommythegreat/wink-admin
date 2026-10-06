@@ -91,7 +91,7 @@ Inside a chat, users can:
 • React to any message with an emoji
 • Report a single message, photo, video or voice note. The report lands in Moderation with the message attached.
 
-Read receipts follow WhatsApp: one grey tick means sent, two grey ticks delivered to the other person's app, two blue ticks read. Settings › Privacy › Read receipts: if either person turns it off, neither sees blue ticks; delivered ticks still show. Contact sharing was removed; contact cards shared before that still show in their chats.
+Read receipts follow WhatsApp: one grey tick means sent, two grey ticks delivered to the other person's phone (even if Wink is closed there), two pink ticks read. Settings › Privacy › Read receipts: if either person turns it off, neither sees read ticks; delivered ticks still show. Contact sharing was removed; contact cards shared before that still show in their chats.
 
 Blocking: from the ⋯ menu a user can block the other person, optionally with a report. Both people then see a note in the chat ("You blocked X..." / "X has blocked you...") and neither can message. The chat stays visible, read-only, for 24 hours after the block, then disappears for both. The blocker can unblock in Settings › Blocked people.`,
   },
