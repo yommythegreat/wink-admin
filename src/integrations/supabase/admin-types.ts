@@ -74,12 +74,16 @@ export type AdminReportRow = {
   created_at: string;
   updated_at: string;
   // The single message reported, when the report was made from a message
-  // (text, or a short-lived link to the photo, video or voice note).
+  // (text, or a short-lived link to the photo, video or voice note). This is
+  // the copy saved when the report was filed, so a later edit or delete by the
+  // sender doesn't change it; the flags say whether either happened since.
   reported_message: {
     kind: string;
     body: string | null;
     media_url: string | null;
     created_at: string;
+    edited_since: boolean;
+    deleted_since: boolean;
   } | null;
 };
 

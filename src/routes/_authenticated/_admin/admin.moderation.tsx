@@ -264,6 +264,11 @@ function AdminModerationPage() {
                                 <div className="mx-2 mt-3 rounded-lg border border-border bg-background p-3">
                                   <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
                                     Reported {r.reported_message.kind === "text" ? "message" : r.reported_message.kind === "audio" ? "voice note" : r.reported_message.kind === "image" ? "photo" : r.reported_message.kind}
+                                    {r.reported_message.deleted_since
+                                      ? " · as sent (the sender has since deleted it)"
+                                      : r.reported_message.edited_since
+                                        ? " · as sent (the sender has since edited it)"
+                                        : ""}
                                   </p>
                                   {r.reported_message.kind === "image" && r.reported_message.media_url ? (
                                     <img src={r.reported_message.media_url} alt="" className="max-h-72 rounded-md" />

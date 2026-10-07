@@ -610,7 +610,9 @@ export const getAdminReports = createServerFn({ method: "POST" })
         .map((u) => [u.id, u.email ?? null]),
     );
 
-    // The reported message, if any. Media is private, so moderators get a
+    // The reported message, if any: the copy saved when the report was filed
+    // (reports.message_snapshot), falling back to the live message for reports
+    // filed before copies were kept. Media is private, so moderators get a
     // signed link valid for an hour.
     const messageIds = [
       ...new Set(
@@ -623,23 +625,38 @@ export const getAdminReports = createServerFn({ method: "POST" })
     if (messageIds.length > 0) {
       const { data: msgs } = await supabaseAdmin
         .from("messages")
-        .select("id, kind, body, media_path, created_at" as never)
+        .select("id, kind, body, media_path, created_at, edited_at, deleted_at" as never)
         .in("id", messageIds);
-      for (const m of (msgs ?? []) as unknown as {
+      type Msg = {
         id: string;
         kind: string;
         body: string | null;
         media_path: string | null;
         created_at: string;
-      }[]) {
-        let mediaUrl: string | null = null;
-        if (m.media_path) {
-          const { data: signed } = await supabaseAdmin.storage
-            .from("chat-media")
-            .createSignedUrl(m.media_path, 60 * 60);
-          mediaUrl = signed?.signedUrl ?? null;
-        }
-        messageMap.set(m.id, { kind: m.kind, body: m.body, media_url: mediaUrl, created_at: m.created_at });
+        edited_at: string | null;
+        deleted_at: string | null;
+      };
+      const live = new Map(((msgs ?? []) as unknown as Msg[]).map((m) => [m.id, m]));
+      const signedUrl = async (path: string | null) => {
+        if (!path) return null;
+        const { data: signed } = await supabaseAdmin.storage.from("chat-media").createSignedUrl(path, 60 * 60);
+        return signed?.signedUrl ?? null;
+      };
+      for (const r of reports ?? []) {
+        const id = (r as { message_id?: string | null }).message_id;
+        if (!id) continue;
+        const snap = (r as { message_snapshot?: Partial<Msg> | null }).message_snapshot ?? null;
+        const now = live.get(id);
+        const src = snap ?? now;
+        if (!src) continue;
+        messageMap.set(`${r.id}`, {
+          kind: src.kind ?? "text",
+          body: src.body ?? null,
+          media_url: await signedUrl(src.media_path ?? null),
+          created_at: src.created_at ?? "",
+          edited_since: !!now?.edited_at && now.edited_at !== (snap?.edited_at ?? null),
+          deleted_since: !!now?.deleted_at && !snap?.deleted_at,
+        });
       }
     }
 
@@ -661,7 +678,7 @@ export const getAdminReports = createServerFn({ method: "POST" })
         status: r.status as "pending" | "reviewed" | "dismissed",
         created_at: r.created_at,
         updated_at: r.updated_at,
-        reported_message: messageId ? (messageMap.get(messageId) ?? null) : null,
+        reported_message: messageId ? (messageMap.get(`${r.id}`) ?? null) : null,
       };
     });
 
